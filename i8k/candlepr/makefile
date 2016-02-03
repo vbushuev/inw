@@ -1,39 +1,26 @@
 #=========================================================
-#		*General Macro Define*
+#		*Commmon defines*
 #=========================================================
 TCROOT	= C:\TC
 CC 	= $(TCROOT)\TCC.EXE
-TLINK 	= $(TCROOT)\TLINK.EXE
+LINK 	= $(TCROOT)\TLINK.EXE
+CCP = $(TCROOT)\CCP.EXE
 ICPLIB	= C:\ICPDAS\LIB
-
+TARGETDIR = dist
+CCFLAGS = -ml -1 -V -vi-
+CCFLAGS += -Di8000
+CCFLAGS += -I$(TCROOT)\INCLUDE;$(ICPLIB);src
+CCFLAGS += -L$(TCROOT)\LIB;$(ICPLIB)
+OBJS = $(SOURCES:.c=obj/.obj)
+LIBS =
 #=========================================================
-#		*Implicit  Rules*
+#		*Project Defines*
 #=========================================================
-.c .obj:
-	$(CC) -c {\obj\$< }
-
-
+NAME = candlepr
+SOURCES = src/main.c
+TARGET = $(TARGETDIR)/$(NAME)
+LIBS+=
 #=========================================================
-#		*Target Macro Define*
+#		*Rules*
 #=========================================================
-TARGET=dist
-DEFINES=i8000
-OBJS=obj\*.obj
-INCS=C:\ICPDAS\LIB
-LIBS=
-
-CC=$(CC) +$(TARGET).CFG
-
-#=========================================================
-#		*Explicit Rules*
-#=========================================================
-$(TARGET).exe: $(TARGET).cfg $(OBJS) $(LIBS)
-  $(TLINK) /x/c @&&|
-$(TCROOT)\lib\c0l.obj+
-$(OBJS)
-$(TARGET),
-{$MakeParams->ICPDAS_LIBS}
-{$MakeParams->CC_LIBS}
-|
-#  -@del $(TARGET).cfg
-
+$(TARGET): $(OBJS) $(LIBS)
