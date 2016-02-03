@@ -1,0 +1,14 @@
+[Project]
+ProjectName=candlepr.mpj
+Output=candlepr.exe
+UnitCount=2
+[Unit1]
+FileName=candle_structs.h
+Compile=0
+Link=0
+Filter=Header Files
+[Unit2]
+FileName=main.c
+Compile=1
+Link=1
+Filter=Source Files
