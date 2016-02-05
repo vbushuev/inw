@@ -1,0 +1,78 @@
+/*****************************************************************************/
+/* Revision history of library to access microSD                             */
+/*                                                                           */
+/*  Lib: sd_v100.lib                                                         */
+/*  Head file: microSD.h                                                     */
+/*                                                                           */
+/*  microSD card supported: 1GB and 2GB. (can not support microSDHC)         */
+/*  Hardware supported:                                                      */
+/*      uPAC-5001, iP-8441, ip-8841, G4500                                   */
+/*      and other controllers which supports microSD.                        */
+/*                                                                           */
+/*  Read/Write Performance                                                   */
+/*      Test: 500 bytes x 1000 loops                                         */
+/*      Read: 10178ms(49.1KB/Sec)                                            */
+/*      Write: 39852ms(12.5KB/Sec)                                           */
+/*****************************************************************************/
+Version 1.0.5 [Jun 26, 2013]
+Modify:
+     1. Supports the FAT32 file system
+        SD cards with a capacity of more than 4G are already available
+        
+     Note: If an SD card with a capacity of more than 4G is used,
+           it is recommended to format the SD card to FAT32 with 32KB clusters.
+
+           The format command can be done in DOS, and the syntax is as follows:
+           
+           FORMAT volume /FS:FAT32 /A:32K
+             
+             volume         Specifies the drive letter (followed by a colon),
+                            mount point, or volume name.
+             /FS:filesystem Specifies the type of the file system.
+             /A:size        Overrides the default allocation unit size.
+
+-------------------------------------------------------------------------------
+[2010,Mar,16] Version 1.0.2
+    New function
+        1. pc_size
+        2. pc_eof
+    
+    Modification
+        1. renames pc_rtfs_init to pc_init 
+        
+    Bugs Fixed
+        1. pc_get_freeSize_KB,pc_get_usedSize_KB
+            When firs time calls either of the functions,
+            the execution time is about 2.6 seconds.
+            2.6 seconds is greater than the system WDT timer (0.8 second).
+            To avoid the reset, the two functions call RefreshWDT internally.
+            
+            When either of the functions is called, the later calls take less than 1 ms.
+        
+        2. pc_open, pc_seek, pc_tell doesn't work correct in version 1.0.1.
+           
+-------------------------------------------------------------------------------
+[2010,Jan,11] Version 1.0.1 (unstable version)
+    New support
+        1. Support G4500
+        
+    New function
+        1. Add pc_tell
+        
+    Modification
+        1. Rename pc_lseek to pc_seek
+        
+    Bugs fixed
+        1. pc_ertfs_init sometimes fails.
+-------------------------------------------------------------------------------
+[2009,09,21] Version 1.0.0
+    1. First released version.
+    
+    2. Supports following API functions.
+        pc_getLibVer,pc_getLibDate,
+        pc_open,pc_read,pc_write,pc_lseek,pc_close,
+        pc_format,pc_mkdir,pc_rmdir,pc_move,pc_del,pc_deltree,pc_isdir,pc_isvol,
+        pc_set_cwd,pc_get_cwd,
+        pc_gfirst,pc_gnext,pc_gdone,
+        pc_get_freeSize_KB,pc_get_usedSize_KB,pc_get_totalSize_KB,
+        pc_get_attributes,pc_set_attributes,pc_get_errno.
