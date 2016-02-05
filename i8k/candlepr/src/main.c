@@ -1,16 +1,9 @@
 //#include <icpdas.h>
-#include <8000e.h>
-#include <8084W.h>
+//#include <8000e.h>
+//#include <8084W.h>
 //#include "candle_structs.h"
-//#include "funcs.h"
+#include "funcs.h"
 
-#define ECSLOT 0
-#define DISLOT 1
-#define DOSLOT 2
-
-#define ALARM_DELAY 1500
-
-#define ERROR_ALARM_DELAY -1
 
 
 int waitUntil(unsigned long flag){
@@ -27,21 +20,7 @@ int waitUntil(unsigned long flag){
 		if(iTime>=ALARM_DELAY)return ERROR_ALARM_DELAY;
 	}
 }
-int exception(int e){
-	Print("Error occurs %i",e);
-	return 0;
-}
-int sendCommand(unsigned long command){
-	//DO_32(DOSLOT,command);
-	return 0;
-}
-int readSignals(unsigned long *data){
-	unsigned long di;
-	di = DI_32(DISLOT);
-	memcpy(data,&di,4);
-	Print("DI data = %-08lX\n\r",data);
-	return 0;
-}
+
 //ifdef INW_TEST
 void test_check(){
 	 unsigned long a = 3L,b = 1;
@@ -65,11 +44,7 @@ void main(void){
 	unsigned char consoleTemp[10];
 	// Standart I/O buffer
 	char ioTemp[256];
-	// Always do that to init lib i8000
-	InitLib();
-	// i8000 has only one systimer
-	TimerOpen();
-	TimerResetValue();
+	ret = initInw();
 	// Help messages to Console
 	Print("Please command (q-quit,c-clear)=");
 	// endless circle for main thread
