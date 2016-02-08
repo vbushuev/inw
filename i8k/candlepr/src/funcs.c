@@ -73,3 +73,23 @@ int readEncoder(int channel,long *data){
     Print("[%i]=%010ld ",channel,data);
     return 0;
 }
+int getRuntime(psRuntimeValues prtv){
+    EE_MultiRead(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)prtv);
+    return 0;
+}
+int setRuntime(sRuntimeValues rtv){
+    EE_WriteEnable();
+    EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
+    EE_WriteProtect();
+    return 0;
+}
+int getTotal(psTotalValues ptv){
+    EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
+    return 0;
+}
+int setTotal(sTotalValues tv){
+    EE_WriteEnable();
+    EE_MultiWrite(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)&tv);
+    EE_WriteProtect();
+    return 0;
+}
