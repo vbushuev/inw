@@ -40,6 +40,7 @@ void main(void){
 	int iTime,counter=0;
 	// DI_DO modules reading buffer
 	unsigned long di_data=0,do_data=0;
+	long encLUp,encLDown,encRUp,encRDown;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
 	// Standart I/O buffer
@@ -55,6 +56,11 @@ void main(void){
 		 **************************************************************************/
 		 // DI module reading
 		 ret = readSignals(&di_data);
+		 if(ret)if(exception(ret))goto Return;
+		 // Read Encoders
+		 ret = readEncoderL(&encLUp,&encLDown);
+		 if(ret)if(exception(ret))goto Return;
+		 ret = readEncoderR(&encRUp,&encRDown);
 		 if(ret)if(exception(ret))goto Return;
 		 /**************************************************************************
  		 * analyze section

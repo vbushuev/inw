@@ -52,3 +52,24 @@ int readSignals(unsigned long *data){
 	Print("DI data = %-08lX\n\r",data);
 	return 0;
 }
+
+int readEncoderL(long *up,long *down){
+    int ret=0;
+    ret = readEncoder(0,up);
+    if(!ret)return ret;
+    ret = readEncoder(1,down);
+    return ret;
+}
+int readEncoderR(long *up,long *down){
+    int ret=0;
+    ret = readEncoder(2,up);
+    if(!ret)return ret;
+    ret = readEncoder(3,down);
+    return ret;
+}
+int readEncoder(int channel,long *data){
+    int Overflow;
+    i8084W_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
+    Print("[%i]=%010ld ",channel,data);
+    return 0;
+}

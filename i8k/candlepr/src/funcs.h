@@ -14,4 +14,7 @@ int initInw();
 int exception(int e);
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
+int readEncoderL(long *up,long *down);
+int readEncoderR(long *up,long *down);
+int readEncoder(int channel,long *data);
 #endif
