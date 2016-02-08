@@ -4,8 +4,6 @@
 //#include "candle_structs.h"
 #include "funcs.h"
 
-
-
 int waitUntil(unsigned long flag){
 	unsigned long rd_data=0,iTime=0,uli=0;
 	TimerResetValue();
@@ -86,7 +84,14 @@ void main(void){
 	// Settings
 	sRuntimeValues rtv;
 	sTotalValues tv;
+	// scenarios
+	sStep *startScenario,
+		*mainScenario,
+		*stopScenario;
+	// Start
 	ret = initInw(&rtv,&tv);
+	if(ret)if(exception(ret))goto Return;
+	ret = loadMainScenario(rtv,mainScenario);
 	if(ret)if(exception(ret))goto Return;
 	// Help messages to Console
 	Print("Please command (q-quit,c-clear)=");
@@ -106,7 +111,7 @@ void main(void){
 		 ret = readEncoderR(&encRUp,&encRDown);
 		 if(ret)if(exception(ret))goto Return;
 		 // read Panel
-		 
+
 		 /**************************************************************************
  		 * analyze section
  		 **************************************************************************/
