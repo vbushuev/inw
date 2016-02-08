@@ -1,5 +1,62 @@
 #include "funcs.h"
-int initInw(){
+
+int exception(int e){
+	Print("Error occurs %i",e);
+	return 0;
+}
+int sendCommand(unsigned long command){
+	//DO_32(DOSLOT,command);
+	return 0;
+}
+int readSignals(unsigned long *data){
+	unsigned long di;
+	di = DI_32(DISLOT);
+	memcpy(data,&di,4);
+	Print("DI data = %-08lX\n\r",data);
+	return 0;
+}
+
+int readEncoderL(long *up,long *down){
+    int ret=0;
+    ret = readEncoder(0,up);
+    if(ret)return ret;
+    ret = readEncoder(1,down);
+    return ret;
+}
+int readEncoderR(long *up,long *down){
+    int ret=0;
+    ret = readEncoder(2,up);
+    if(ret)return ret;
+    ret = readEncoder(3,down);
+    return ret;
+}
+int readEncoder(int channel,long *data){
+    int Overflow;
+    i8084W_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
+    Print("[%i]=%010ld ",channel,data);
+    return 0;
+}
+int getRuntime(psRuntimeValues prtv){
+    EE_MultiRead(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)prtv);
+    return 0;
+}
+int setRuntime(sRuntimeValues rtv){
+    EE_WriteEnable();
+    EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
+    EE_WriteProtect();
+    return 0;
+}
+int getTotal(psTotalValues ptv){
+    EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
+    return 0;
+}
+int setTotal(sTotalValues tv){
+    EE_WriteEnable();
+    EE_MultiWrite(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)&tv);
+    EE_WriteProtect();
+    return 0;
+}
+int initInw(psRuntimeValues prtv, psTotalValues ptv){
     int iRet=0,channel;
     // Always do that to init lib i8000
 	InitLib();
@@ -35,61 +92,9 @@ int initInw(){
             i8084W_ClrCnt(ECSLOT,channel);
         }
     }
-    return 0;
-}
-int exception(int e){
-	Print("Error occurs %i",e);
-	return 0;
-}
-int sendCommand(unsigned long command){
-	//DO_32(DOSLOT,command);
-	return 0;
-}
-int readSignals(unsigned long *data){
-	unsigned long di;
-	di = DI_32(DISLOT);
-	memcpy(data,&di,4);
-	Print("DI data = %-08lX\n\r",data);
-	return 0;
-}
-
-int readEncoderL(long *up,long *down){
-    int ret=0;
-    ret = readEncoder(0,up);
-    if(!ret)return ret;
-    ret = readEncoder(1,down);
-    return ret;
-}
-int readEncoderR(long *up,long *down){
-    int ret=0;
-    ret = readEncoder(2,up);
-    if(!ret)return ret;
-    ret = readEncoder(3,down);
-    return ret;
-}
-int readEncoder(int channel,long *data){
-    int Overflow;
-    i8084W_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
-    Print("[%i]=%010ld ",channel,data);
-    return 0;
-}
-int getRuntime(psRuntimeValues prtv){
-    EE_MultiRead(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)prtv);
-    return 0;
-}
-int setRuntime(sRuntimeValues rtv){
-    EE_WriteEnable();
-    EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
-    EE_WriteProtect();
-    return 0;
-}
-int getTotal(psTotalValues ptv){
-    EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
-    return 0;
-}
-int setTotal(sTotalValues tv){
-    EE_WriteEnable();
-    EE_MultiWrite(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)&tv);
-    EE_WriteProtect();
+    iRet = getTotal(ptv);
+    if(iRet) return iRet;
+    iRet = getRuntime(prtv);
+    if(iRet) return iRet;
     return 0;
 }

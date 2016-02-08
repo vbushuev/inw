@@ -83,10 +83,14 @@ void main(void){
 	unsigned char consoleTemp[10];
 	// Standart I/O buffer
 	char ioTemp[256];
-	ret = initInw();
+	// Settings
+	sRuntimeValues rtv;
+	sTotalValues tv;
+	ret = initInw(&rtv,&tv);
+	if(ret)if(exception(ret))goto Return;
 	// Help messages to Console
 	Print("Please command (q-quit,c-clear)=");
-	test_check();
+	//test_check();
 	// endless circle for main thread
 	//for(;;){
 	while(counter<1){
@@ -101,6 +105,8 @@ void main(void){
 		 if(ret)if(exception(ret))goto Return;
 		 ret = readEncoderR(&encRUp,&encRDown);
 		 if(ret)if(exception(ret))goto Return;
+		 // read Panel
+		 
 		 /**************************************************************************
  		 * analyze section
  		 **************************************************************************/

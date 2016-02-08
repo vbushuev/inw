@@ -5,7 +5,7 @@
 #include "defines.h"
 
 
-int initInw();
+int initInw(psRuntimeValues prtv, psTotalValues ptv);
 int exception(int e);
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
@@ -13,8 +13,6 @@ int readEncoderL(long *up,long *down);
 int readEncoderR(long *up,long *down);
 int readEncoder(int channel,long *data);
 // EEPROM
-// runtime values
-
 int getRuntime(psRuntimeValues prtv);
 int setRuntime(sRuntimeValues rtv);
 int getTotal(psTotalValues ptv);

@@ -13,15 +13,37 @@
 typedef unsigned char  byte;
 
 #pragma pack(push,1)
+// script struct
+/* wait type
+ * type:
+ *  0 - wait for signal
+ *  1 - timer
+ *  2 - encoder
+ *  3 - произвести замеры счетчиков и таймеров для левого
+ *  4 - произвести замеры счетчиков и таймеров для правого 
+ * value
+ */
 typedef struct {
-    byte tV10;
-	byte tV19;
-	int LC;
-	int Lh;
-	int RC;
-	int Rh;
-	int Lr;
-	int Rr;
+    byte type;
+    unsigned long value;
+} sWait;
+/* One step of script struct
+ * command - initiat command
+ * wait - event signal wait;
+ * finish - finish command if ==0 do nothing
+ * timer - kill timer for wait
+ */
+typedef struct {
+    unsigned long command;
+    sWait wait;
+    unsigned long finish;
+    unsigned long timer;
+} sStep,*psStep;
+// runtime values
+typedef struct {
+    byte tV10;byte tV19;
+	int LC;int Lh;int Lr;
+	int RC;int Rh;int Rr;
 	int L;
 	int R;
 	int tstart;
