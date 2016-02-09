@@ -86,13 +86,18 @@ void main(void){
 	sTotalValues tv;
 	// scenarios
 	sStep *startScenario,
-		*mainScenario,
-		*stopScenario;
+		*initScenario,
+		*mainScenario;
 	// Start
 	ret = initInw(&rtv,&tv);
 	if(ret)if(exception(ret))goto Return;
+	ret = loadInitScenario(rtv,initScenario);
+	if(ret)if(exception(ret))goto Return;
+	ret = loadStartScenario(rtv,startScenario);
+	if(ret)if(exception(ret))goto Return;
 	ret = loadMainScenario(rtv,mainScenario);
 	if(ret)if(exception(ret))goto Return;
+	
 	// Help messages to Console
 	Print("Please command (q-quit,c-clear)=");
 	//test_check();
