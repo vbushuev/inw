@@ -60,4 +60,12 @@ typedef struct {
     unsigned long TLtotal;
     unsigned long TRtotal;
 } sTotalValues, *psTotalValues;
+
+/* Program state
+ *
+ */
+typedef struct {
+    byte state;
+    
+} sProgramState,*psProgramState;
 #pragma pack(pop)

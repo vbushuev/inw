@@ -97,7 +97,7 @@ void main(void){
 	if(ret)if(exception(ret))goto Return;
 	ret = loadMainScenario(rtv,mainScenario);
 	if(ret)if(exception(ret))goto Return;
-	
+
 	// Help messages to Console
 	Print("Please command (q-quit,c-clear)=");
 	//test_check();
