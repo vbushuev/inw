@@ -13,7 +13,7 @@ LINKFLAGS = /x/c
 LINKFLAGS = $(LINKFLAGS) /L$(TCROOT)\LIB;$(ICPLIB)
 
 NAME = candlepr
-LIB = mathl.lib emu.lib cl.lib 8000e.lib 8084w.lib
+LIB = mathl.lib emu.lib cl.lib 8000e.lib 8080l.lib
 LIBOBJ = $(TCROOT)\LIB\c0l.obj
 OBJ = obj\main.obj obj\funcs.obj
 

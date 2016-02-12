@@ -32,8 +32,8 @@ int readEncoderR(long *up,long *down){
 }
 int readEncoder(int channel,long *data){
     int Overflow;
-    i8084W_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
-    Print("[%i]=%010ld ",channel,data);
+    i8080_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
+    Print("[%i]=%010ld\r\n",channel,data);
     return 0;
 }
 int getRuntime(psRuntimeValues prtv){
@@ -64,32 +64,32 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 	TimerOpen();
 	TimerResetValue();
 	//InitEncoder
-	iRet=i8084W_InitDriver(ECSLOT);
+	iRet=i8080_InitDriver(ECSLOT);
     if (iRet==(-1)){
-		Print("Initiate 8084 on slot%d error!\n\r",ECSLOT);
-		Print("  Cannot find 8084.\r\n");
+		Print("Initiate 8080 on slot%d error!\n\r",ECSLOT);
+		Print("  Cannot find 8080.\r\n");
 	}
 	else{
-		Print("Initiate 8084 on slot%d ok.\n\r",ECSLOT);
+		Print("Initiate 8080 on slot%d ok.\n\r",ECSLOT);
         if(iRet>0){
             Print("  Some Pulse/Dir channels have one count offset.\n\r");
             Print("  Return code:%02X\n\r",iRet);
         }
         for (channel=0; channel<8; channel++){
-            i8084W_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
-            i8084W_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
+            i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
+            i8080_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
                 //mode 0: Pulse/Dir counter mode
                 //     1: Up/Down counter mode
                 //     2: frequency mode
                 //     3: Up counter mode
 
-            i8084W_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
-            i8084W_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
+            i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
+            i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
         }
 
         //Clear all count at beginning.
         for (channel=0; channel<8; channel++){
-            i8084W_ClrCnt(ECSLOT,channel);
+            i8080_ClrCnt(ECSLOT,channel);
         }
     }
     iRet = getTotal(ptv);

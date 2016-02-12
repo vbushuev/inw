@@ -1,7 +1,7 @@
 
-#define ECSLOT 0
-#define DISLOT 1
-#define DOSLOT 2
+#define ECSLOT 2
+#define DISLOT 0
+#define DOSLOT 1
 
 #define ALARM_DELAY 1500
 
@@ -66,6 +66,6 @@ typedef struct {
  */
 typedef struct {
     byte state;
-    
+
 } sProgramState,*psProgramState;
 #pragma pack(pop)
