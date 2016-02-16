@@ -3,3 +3,5 @@ samkoon/
 *.obj
 *.EXE
 *.OBJ
+*.eep
+i8k/candlepr/dist/AUTOEXEC.BAT

@@ -1,18 +1,19 @@
 #include "funcs.h"
 
 int exception(int e){
-	Print("Error occurs %i",e);
+	inwPrint("Error occurs %i\r\n",e);
 	return 0;
 }
 int sendCommand(unsigned long command){
-	//DO_32(DOSLOT,command);
+	DO_32(DOSLOT,command);
+	inwPrint("DO data = %-08lX\n\r",command);
 	return 0;
 }
 int readSignals(unsigned long *data){
 	unsigned long di;
 	di = DI_32(DISLOT);
 	memcpy(data,&di,4);
-	Print("DI data = %-08lX\n\r",data);
+	inwPrint("DI data = %08X\n\r",data);
 	return 0;
 }
 
@@ -33,7 +34,7 @@ int readEncoderR(long *up,long *down){
 int readEncoder(int channel,long *data){
     int Overflow;
     i8080_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
-    Print("[%i]=%010ld\r\n",channel,data);
+    inwPrint("[%i]=%04x\r\n",channel,data);
     return 0;
 }
 int getRuntime(psRuntimeValues prtv){
@@ -45,6 +46,112 @@ int setRuntime(sRuntimeValues rtv){
     EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
     EE_WriteProtect();
     return 0;
+}
+int log2EEPROM(char*d,char* o,int len){
+	char reset[256];
+	memset(reset,0xff,256);
+	EE_WriteEnable();
+	EE_MultiWrite(EEPROM_TOTAL+1,0,256,reset);
+	EE_MultiWrite(EEPROM_TOTAL+2,0,256,reset);
+    EE_MultiWrite(EEPROM_TOTAL+1,0,17,(char*)d);
+    EE_MultiWrite(EEPROM_TOTAL+1,19,len,(char*)o);
+    EE_WriteProtect();
+    return 0;
+}
+byte lrc(byte *buf, int len){
+	byte LRC =0;
+	int i=0;
+	for(i = 1; i < len; i++) {
+		LRC += buf[i];
+	}
+	return (byte)-LRC;
+}
+sModbusPack parse(char* in,int len){
+	sModbusPack ret;
+	ret.colon=':';
+	ret.addr=16*ascii_to_hex(in[1]) + ascii_to_hex(in[2]);
+	ret.func=16*ascii_to_hex(in[3]) + ascii_to_hex(in[4]);
+	ret.reg	=4096*ascii_to_hex(in[5]) + 256*ascii_to_hex(in[6]) + 16*ascii_to_hex(in[7]) + ascii_to_hex(in[8]);
+	ret.data=4096*ascii_to_hex(in[9]) + 256*ascii_to_hex(in[10]) + 16*ascii_to_hex(in[11]) + ascii_to_hex(in[12]);
+	ret.lrc	=16*ascii_to_hex(in[13]) + ascii_to_hex(in[14]);
+	return ret;
+}
+void serialize(sModbusPack mb,byte *ret){
+	int i=5;
+	memset(ret,0,256);
+	ret[0] = (byte)mb.colon;
+	ret[1] = (byte)mb.addr/16;
+	ret[2] = (byte)mb.addr%16;
+	ret[3] = (byte)mb.func/16;
+	ret[4] = (byte)mb.func%16;
+	memcpy(ret+5,mb.response,mb.response_size);
+	mb.lrc=lrc(ret,5+mb.response_size);
+	ret[5+mb.response_size] = (byte)mb.lrc/16;
+	ret[6+mb.response_size] = (byte)mb.lrc%16;
+	for(i=0;i<(6+mb.response_size);i++){
+		ret[i]=hex_to_ascii[(int)ret[i]];
+	}
+	ret[7+mb.response_size] = 0x0a;
+	ret[8+mb.response_size] = 0x0d;
+}
+int checkLRC(sModbusPack mb){
+	int lrc;
+	sModbusPack ch;
+	byte c[18];
+	ch=mb;
+	serialize(ch,c);
+	lrc = 16*ascii_to_hex(c[13]) + ascii_to_hex(c[14]);
+	Print(c);
+	Show5DigitLed(1,8);
+	if(lrc==mb.lrc){
+		 leds(0xffff);
+	}else{
+		leds(lrc);
+		leds(mb.lrc);
+	}
+	return (lrc==mb.lrc)?0:1;
+}
+sModbusPack analyzeModBus(sModbusPack mb){
+	int ret =0;
+	//Show5DigitLed(1,10); leds(pmb->addr);//addr
+	//Show5DigitLed(1,15); leds(pmb->func);
+	//Show5DigitLed(1,13); leds(pmb->reg);
+	//Show5DigitLed(1,17); leds(pmb->data);
+	switch(mb.func){
+		case 0x03:{ // read single register
+			EE_MultiRead(EEPROM_RUNTIME,mb.reg,2*mb.data,(byte*)mb.response);
+			Show5DigitLed(1,13); leds(2*mb.data);
+			mb.response_size=2*mb.data;
+		}break;
+		case 0x06:{ // write single register
+
+		}break;
+	}
+	return mb;
+}
+int readModbus(){
+	int ret = 0,i=0;
+	byte inbuf[256],outbuf[256];
+	sModbusPack mb,omb;
+	memset(mb.response,0,256);
+	memset(inbuf,0,sizeof(inbuf));
+	memset(outbuf,0,sizeof(outbuf));
+	if(Kbhit()){
+		i=LineInput(inbuf,sizeof(inbuf));
+		Getch();//get LF
+		if(inbuf[0]==':'){
+			mb=parse(inbuf,i);
+			omb=analyzeModBus(mb);
+			serialize(omb,outbuf);
+			Puts(outbuf);
+			Show5DigitLed(1,14); leds(mb.response_size+8);
+			log2EEPROM(inbuf,outbuf,mb.response_size+8);
+			Show5DigitLed(1,15);
+			ledstr(outbuf,18);
+			leds(mb.lrc);
+		}
+	}
+	return ret;
 }
 int getTotal(psTotalValues ptv){
     EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
@@ -66,14 +173,14 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 	//InitEncoder
 	iRet=i8080_InitDriver(ECSLOT);
     if (iRet==(-1)){
-		Print("Initiate 8080 on slot%d error!\n\r",ECSLOT);
-		Print("  Cannot find 8080.\r\n");
+		inwPrint("Initiate 8080 on slot%d error!\n\r",ECSLOT);
+		inwPrint("  Cannot find 8080.\r\n");
 	}
 	else{
-		Print("Initiate 8080 on slot%d ok.\n\r",ECSLOT);
+		inwPrint("Initiate 8080 on slot%d ok.\n\r",ECSLOT);
         if(iRet>0){
-            Print("  Some Pulse/Dir channels have one count offset.\n\r");
-            Print("  Return code:%02X\n\r",iRet);
+            inwPrint("  Some Pulse/Dir channels have one count offset.\n\r");
+            inwPrint("  Return code:%02X\n\r",iRet);
         }
         for (channel=0; channel<8; channel++){
             i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
@@ -96,7 +203,98 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
     if(iRet) return iRet;
     iRet = getRuntime(prtv);
     if(iRet) return iRet;
+	if(prtv->tV10==0){
+		/*
+		byte tV10;byte tV19;
+	   int LC;int Lh;int Lr;
+	   int RC;int Rh;int Rr;
+	   int L;int R;int tstart;int ttaker;
+	   int CL;int CR;int TL;int TR;
+		 */
+		sRuntimeValues rtv = {
+			5,5,
+			100,150,60,
+			100,150,60,
+			100,100,5,5,
+			0,0,0,0
+		};
+		memcpy(prtv,&rtv,sizeof(sRuntimeValues));
+		iRet = setRuntime(rtv);
+	}
+	// Init leds
+	Init5DigitLed();
+	Show5DigitLed(1,16);
+	Show5DigitLed(2,16);
+	Show5DigitLed(3,16);
+	Show5DigitLed(4,16);
+	Show5DigitLed(5,16);
+	// Init ComPort
     return 0;
+}
+/*
+ *
+ */
+void ledstr(char *str,int len){
+	int row[5],i=0;
+	Show5DigitLed(1,15);
+	Show5DigitLed(2,13);
+	Show5DigitLed(3,10);
+	Show5DigitLed(4,13);
+	Show5DigitLed(5,10);
+	DelayMs(800);
+
+	Show5DigitLed(1,ascii_to_hex((int)str[5]));
+	Show5DigitLed(2,ascii_to_hex((int)str[6]));
+	Show5DigitLed(3,ascii_to_hex((int)str[7]));
+	Show5DigitLed(4,ascii_to_hex((int)str[8]));
+	Show5DigitLed(5,ascii_to_hex((int)str[9]));
+}
+void leds(int s){
+	int p1,p2,p3,p4;
+	if(s<0){
+		Show5DigitLed(2,15);
+		Show5DigitLed(3,15);
+		Show5DigitLed(4,15);
+		Show5DigitLed(5,15);
+	}
+	else if(s<16){
+		Show5DigitLed(2,16);
+		Show5DigitLed(3,16);
+		Show5DigitLed(4,16);
+		Show5DigitLed(5,s);
+	}
+	else if(s<256){
+		Show5DigitLed(2,16);
+		Show5DigitLed(3,16);
+		Show5DigitLed(4,s/16);
+		Show5DigitLed(5,s%16);
+	}
+	else if(s<4096){
+		p2 = s/256;
+		p3 = (s-p2*256)/16;
+		p4 = s-p2*256-p3*16;
+		Show5DigitLed(2,16);
+		Show5DigitLed(3,p2);
+		Show5DigitLed(4,p3);
+		Show5DigitLed(5,p4);
+	}
+	else{
+		p1 = s/4096;
+		p2 = (s-4096*p1)/256;
+		p3 = (s-4096*p1-p2*256)/16;
+		p4 = (s-4096*p1-p2*256-p3*16);
+		Show5DigitLed(2,p1);
+		Show5DigitLed(3,p2);
+		Show5DigitLed(4,p3);
+		Show5DigitLed(5,p4);
+	}
+	DelayMs(800);
+}
+void ledsOff(){
+	Show5DigitLed(2,16);
+	Show5DigitLed(3,16);
+	Show5DigitLed(4,16);
+	Show5DigitLed(5,16);
 }
 /*
  * Start scenario
@@ -104,7 +302,7 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 /*
  * Work scenario automate
  */
- int loadMainScenario(sRuntimeValues rtv,sStep * sc){
+int loadMainScenario(sRuntimeValues rtv,sStep * sc){
      /*sStep scenatioW[]={
          {0x00000002,{0,0x00000002},0x00000000,0},  //00    убираем засыпку V2 -> A2
          {0x00000008,{0,0x00000008},0x00000000,0},  //01    верхний поршень прижимает V4 -> A4
@@ -209,3 +407,109 @@ int loadInitScenario(sRuntimeValues rtv,sStep * sc){
 	 memcpy(sc,scenatioW,sizeof(scenatioW));
      return 0;
  }
+
+
+/*=====================================================================*/
+/*==== Following functions are used to receive data from COM port.  ===*/
+/*==== You can copy the functions to your own program.              ===*/
+/*=====================================================================*/
+/*
+The following two functions are implemented by [non-block] method.
+
+Non-Block method: After calling the function, if there is no data in the
+			   COM port input buffer, the CPU skip the function and
+			   go to execute next code.
+*/
+int Receive_Data(int iPort,unsigned char* cInBuf,char cTerminator,long lTimeout){
+	/*
+	 Uses COM port to receive data with a terminative char.
+
+	 iPort:    COM port number to receive data.
+			   0:COM0, 1:COM1, 2:COM2  .....
+	 *cInBuf:  Input buffer to receive data.
+	 cTerminator: what is the last byte ?
+	 lTimeout: timeout to receive data. (Unit: ms)
+			   The timeout is measured from last received byte
+			   to the terminator.
+	 return: >0 :length of received data
+			  0 :doen't receive any data
+			 -1 :timeout
+	*/
+ 	unsigned char cChar;
+ 	int iIndex=0;
+ 	unsigned long lStartTime;
+	if(IsCom(iPort)){
+		lStartTime=GetTimeTicks();
+	 	for(;;){
+			while(IsCom(iPort)) {//check COM port
+				cChar=ReadCom(iPort);
+			 	if(cChar==cTerminator){/* the terminal char is 0x0D */
+					cInBuf[iIndex]=0;  /* Add the zero end to the data. */
+				 	return iIndex;     /* return data length                */
+				}/* (doesn't include the cTerminator) */
+			 	else cInBuf[iIndex++]=cChar;
+			 	lStartTime=GetTimeTicks();  /* refresh data timeout */
+		 	}
+		 	if((GetTimeTicks()-lStartTime)>=lTimeout){
+				cInBuf[iIndex]=0; /* Add the zero end to the data. */
+			 	return -1;  /* receive data timeout */
+		 	}
+		 	RefreshWDT();
+	 	}
+ 	}
+ 	else return 0;
+}
+int Receive_Data_Length(int iPort,unsigned char* cInBuf,int iLength,long lTimeout){
+	/*
+	 Uses COM port to receive string (fixed data length).
+
+	 iPort:    COM port number to receive data.
+			   0:COM0, 1:COM1, 2:COM2  .....
+	 *cInBuf:  Input buffer to receive data.
+	 iLength:  how many bytes to receive?
+	 lTimeout: timeout to receive data. (Unit: ms)
+			   The timeout is measured from last received byte
+			   to receive whole data.
+	 return: >0 :length of received data
+			  0 :doen't receive any data
+			 -1 :timeout
+	*/
+	unsigned char cChar;
+	int iIndex=0;
+ 	unsigned long lStartTime;
+ 	if(IsCom(iPort)){
+		lStartTime=GetTimeTicks();
+	 	for(;;){
+		 	while(IsCom(iPort)){//check COM port
+			 	cInBuf[iIndex++]=ReadCom(iPort);
+			 	if(iIndex>=iLength){
+					cInBuf[iIndex]=0;
+				 	return iIndex;     /* return data length */
+			 	}
+				lStartTime=GetTimeTicks();  /* refresh data timeout */
+		 	}
+		 	if((GetTimeTicks()-lStartTime)>=lTimeout) return -1;  /* receive data timeout */
+			RefreshWDT();
+	 	}
+ 	}
+ 	else return 0;
+}
+void inwPrint(char *s,...){
+
+	return;
+}
+int readModbusRTU(){
+	int ret = 0,i=0;
+	char inbuf[256];
+	for(i=0;i<256;++i)inbuf[i]=0x00; //init buf
+	i=0;
+	while(Kbhit()){
+		inbuf[i]=Getch();
+		ret = ascii_to_hex(inbuf[i]);
+		Show5DigitLed(1,12);
+		leds(ret);
+		i++;
+	}
+	ret = i;
+	return ret;
+}

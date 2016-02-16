@@ -1,7 +1,8 @@
 
-#define ECSLOT 2
-#define DISLOT 0
-#define DOSLOT 1
+#define ECSLOT 0
+#define DISLOT 1
+#define DOSLOT 2
+#define COMPORT 1
 
 #define ALARM_DELAY 1500
 
@@ -9,6 +10,7 @@
 
 #define EEPROM_RUNTIME 0
 #define EEPROM_TOTAL 1
+
 
 typedef unsigned char  byte;
 
@@ -41,7 +43,7 @@ typedef struct {
 } sStep,*psStep;
 // runtime values
 typedef struct {
-    byte tV10;byte tV19;
+    int tV10;int tV19;
 	int LC;int Lh;int Lr;
 	int RC;int Rh;int Rr;
 	int L;
@@ -60,7 +62,17 @@ typedef struct {
     unsigned long TLtotal;
     unsigned long TRtotal;
 } sTotalValues, *psTotalValues;
-
+// modbus ASCII struct
+typedef struct {
+    char colon;
+    int addr;
+    int func;
+    unsigned long reg;
+    unsigned long data;
+    byte response[256];
+    int response_size;
+    int lrc;
+}sModbusPack, *psModbusPack;
 /* Program state
  *
  */

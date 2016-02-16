@@ -18,16 +18,10 @@ LIBOBJ = $(TCROOT)\LIB\c0l.obj
 OBJ = obj\main.obj obj\funcs.obj
 
 all: clean project
-	@echo .
-	@echo .
-	@echo .
-	@echo =====================================
-	@echo ================ RUN ================
-	@echo =====================================
-	@echo ..
-	@dist\$(NAME).exe
+	echo $(NAME).exe >> dist\autoexec.bat
 clean:
 	cmd /C del /Q /F dist\*,obj\*
+
 
 obj\main.obj: $(DIR)\main.c
 	$(CC) $(CCFLAGS) -c -o$@ $?
