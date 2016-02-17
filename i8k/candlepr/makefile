@@ -15,7 +15,7 @@ LINKFLAGS = $(LINKFLAGS) /L$(TCROOT)\LIB;$(ICPLIB)
 NAME = candlepr
 LIB = mathl.lib emu.lib cl.lib 8000e.lib 8080l.lib
 LIBOBJ = $(TCROOT)\LIB\c0l.obj
-OBJ = obj\main.obj obj\funcs.obj
+OBJ = obj\common.obj obj\io.obj obj\modbus.obj obj\main.obj obj\funcs.obj
 
 all: clean project
 	echo $(NAME).exe >> dist\autoexec.bat
@@ -23,7 +23,16 @@ clean:
 	cmd /C del /Q /F dist\*,obj\*
 
 
+obj\common.obj: $(DIR)\common.c
+		$(CC) $(CCFLAGS) -c -o$@ $?
+
+obj\io.obj: $(DIR)\io.c
+			$(CC) $(CCFLAGS) -c -o$@ $?
+
 obj\main.obj: $(DIR)\main.c
+	$(CC) $(CCFLAGS) -c -o$@ $?
+
+obj\modbus.obj: $(DIR)\modbus.c
 	$(CC) $(CCFLAGS) -c -o$@ $?
 
 obj\funcs.obj: $(DIR)\funcs.c

@@ -1,3 +1,6 @@
+#ifndef _INW_H_
+#define _IWN_H_
+#include "errors.h"
 
 #define ECSLOT 0
 #define DISLOT 1
@@ -6,7 +9,7 @@
 
 #define ALARM_DELAY 1500
 
-#define ERROR_ALARM_DELAY -1
+
 
 #define EEPROM_RUNTIME 0
 #define EEPROM_TOTAL 1
@@ -81,3 +84,4 @@ typedef struct {
 
 } sProgramState,*psProgramState;
 #pragma pack(pop)
+#endif
