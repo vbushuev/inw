@@ -31,6 +31,14 @@ int readEncoder(int channel,long *data){
     inwPrint("[%i]=%04x\r\n",channel,data);
     return 0;
 }
+int initComPort(){
+    InstallCom(COMPORT,115200,8,0,1);
+    return 0;
+}
+int closeComPort(){
+    RestoreCom(COMPORT);
+    return 0;
+}
 /*=====================================================================*/
 /*==== Following functions are used to receive data from COM port.  ===*/
 /*==== You can copy the functions to your own program.              ===*/
@@ -42,11 +50,11 @@ Non-Block method: After calling the function, if there is no data in the
 			   COM port input buffer, the CPU skip the function and
 			   go to execute next code.
 */
-int Receive_Data(int iPort,unsigned char* cInBuf,char cTerminator,long lTimeout){
+int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout){
 	/*
 	 Uses COM port to receive data with a terminative char.
 
-	 iPort:    COM port number to receive data.
+	 COMPORT:    COM port number to receive data.
 			   0:COM0, 1:COM1, 2:COM2  .....
 	 *cInBuf:  Input buffer to receive data.
 	 cTerminator: what is the last byte ?
@@ -60,11 +68,11 @@ int Receive_Data(int iPort,unsigned char* cInBuf,char cTerminator,long lTimeout)
  	unsigned char cChar;
  	int iIndex=0;
  	unsigned long lStartTime;
-	if(IsCom(iPort)){
+	if(IsCom(COMPORT)){
 		lStartTime=GetTimeTicks();
 	 	for(;;){
-			while(IsCom(iPort)) {//check COM port
-				cChar=ReadCom(iPort);
+			while(IsCom(COMPORT)) {//check COM port
+				cChar=ReadCom(COMPORT);
 			 	if(cChar==cTerminator){/* the terminal char is 0x0D */
 					cInBuf[iIndex]=0;  /* Add the zero end to the data. */
 				 	return iIndex;     /* return data length                */
@@ -74,18 +82,18 @@ int Receive_Data(int iPort,unsigned char* cInBuf,char cTerminator,long lTimeout)
 		 	}
 		 	if((GetTimeTicks()-lStartTime)>=lTimeout){
 				cInBuf[iIndex]=0; /* Add the zero end to the data. */
-			 	return -1;  /* receive data timeout */
+			 	return ERROR_COM_TIMEOUT;  /* receive data timeout */
 		 	}
 		 	RefreshWDT();
 	 	}
  	}
  	else return 0;
 }
-int Receive_Data_Length(int iPort,unsigned char* cInBuf,int iLength,long lTimeout){
+int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
 	/*
 	 Uses COM port to receive string (fixed data length).
 
-	 iPort:    COM port number to receive data.
+	 COMPORT:    COM port number to receive data.
 			   0:COM0, 1:COM1, 2:COM2  .....
 	 *cInBuf:  Input buffer to receive data.
 	 iLength:  how many bytes to receive?
@@ -99,18 +107,18 @@ int Receive_Data_Length(int iPort,unsigned char* cInBuf,int iLength,long lTimeou
 	unsigned char cChar;
 	int iIndex=0;
  	unsigned long lStartTime;
- 	if(IsCom(iPort)){
+ 	if(IsCom(COMPORT)){
 		lStartTime=GetTimeTicks();
 	 	for(;;){
-		 	while(IsCom(iPort)){//check COM port
-			 	cInBuf[iIndex++]=ReadCom(iPort);
+		 	while(IsCom(COMPORT)){//check COM port
+			 	cInBuf[iIndex++]=ReadCom(COMPORT);
 			 	if(iIndex>=iLength){
 					cInBuf[iIndex]=0;
 				 	return iIndex;     /* return data length */
 			 	}
 				lStartTime=GetTimeTicks();  /* refresh data timeout */
 		 	}
-		 	if((GetTimeTicks()-lStartTime)>=lTimeout) return -1;  /* receive data timeout */
+		 	if((GetTimeTicks()-lStartTime)>=lTimeout) return ERROR_COM_TIMEOUT;  /* receive data timeout */
 			RefreshWDT();
 	 	}
  	}

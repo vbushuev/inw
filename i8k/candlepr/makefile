@@ -17,11 +17,8 @@ LIB = mathl.lib emu.lib cl.lib 8000e.lib 8080l.lib
 LIBOBJ = $(TCROOT)\LIB\c0l.obj
 OBJ = obj\common.obj obj\io.obj obj\modbus.obj obj\main.obj obj\funcs.obj
 
-all: clean project
+all: project
 	echo $(NAME).exe >> dist\autoexec.bat
-clean:
-	cmd /C del /Q /F dist\*,obj\*
-
 
 obj\common.obj: $(DIR)\common.c
 		$(CC) $(CCFLAGS) -c -o$@ $?

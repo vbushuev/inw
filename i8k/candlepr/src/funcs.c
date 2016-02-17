@@ -1,7 +1,25 @@
 #include "funcs.h"
-
+/*
+ * Initialize inw
+ */
 int initInw(psRuntimeValues prtv, psTotalValues ptv){
     int iRet=0,channel;
+    char fresh[256];
+    /*
+    byte tV10;byte tV19;
+   int LC;int Lh;int Lr;
+   int RC;int Rh;int Rr;
+   int L;int R;int tstart;int ttaker;
+   int CL;int CR;int TL;int TR;
+     */
+    sRuntimeValues rtv = {
+        5,5,
+        100,150,60,
+        100,150,60,
+        100,100,5,5,
+        0,0,0,0
+    };
+    sTotalValues tv = {0,0,0,0};
     // Always do that to init lib i8000
 	InitLib();
     // i8000 has only one systimer
@@ -9,55 +27,37 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 	TimerResetValue();
 	//InitEncoder
 	iRet=i8080_InitDriver(ECSLOT);
-    if (iRet==(-1)){
-		inwPrint("Initiate 8080 on slot%d error!\n\r",ECSLOT);
-		inwPrint("  Cannot find 8080.\r\n");
-	}
-	else{
-		inwPrint("Initiate 8080 on slot%d ok.\n\r",ECSLOT);
-        if(iRet>0){
-            inwPrint("  Some Pulse/Dir channels have one count offset.\n\r");
-            inwPrint("  Return code:%02X\n\r",iRet);
-        }
-        for (channel=0; channel<8; channel++){
-            i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
-            i8080_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
-                //mode 0: Pulse/Dir counter mode
+    if (iRet==(-1)) return ERROR_ENCODER_NOTFOUND;
+	if(iRet>0){
+        inwPrint("  Some Pulse/Dir channels have one count offset.\n\r");
+        inwPrint("  Return code:%02X\n\r",iRet);
+    }
+    for (channel=0; channel<8; channel++){
+        i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
+        i8080_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
+        	//mode 0: Pulse/Dir counter mode
                 //     1: Up/Down counter mode
                 //     2: frequency mode
                 //     3: Up counter mode
 
-            i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
-            i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
-        }
-
-        //Clear all count at beginning.
-        for (channel=0; channel<8; channel++){
-            i8080_ClrCnt(ECSLOT,channel);
-        }
+        i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
+        i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
     }
+    //Clear all count at beginning.
+    for (channel=0; channel<8; channel++) i8080_ClrCnt(ECSLOT,channel);
     iRet = getTotal(ptv);
     if(iRet) return iRet;
     iRet = getRuntime(prtv);
     if(iRet) return iRet;
-	if(prtv->tV10==0){
-		/*
-		byte tV10;byte tV19;
-	   int LC;int Lh;int Lr;
-	   int RC;int Rh;int Rr;
-	   int L;int R;int tstart;int ttaker;
-	   int CL;int CR;int TL;int TR;
-		 */
-		sRuntimeValues rtv = {
-			5,5,
-			100,150,60,
-			100,150,60,
-			100,100,5,5,
-			0,0,0,0
-		};
+	//if(prtv->tV10==0){
 		memcpy(prtv,&rtv,sizeof(sRuntimeValues));
+        EE_WriteEnable();
+        memset(fresh,0,256);
+        EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
+        EE_MultiWrite(EEPROM_RUNTIME,sizeof(sRuntimeValues),256-sizeof(sRuntimeValues),fresh);
+        EE_WriteProtect();
 		iRet = setRuntime(rtv);
-	}
+	//}
 	// Init leds
 	Init5DigitLed();
 	Show5DigitLed(1,16);
@@ -66,7 +66,12 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 	Show5DigitLed(4,16);
 	Show5DigitLed(5,16);
 	// Init ComPort
+    initComPort();
     return 0;
+}
+void deinitInw(){
+    TimerClose();
+    closeComPort();
 }
 /*
  * Start scenario

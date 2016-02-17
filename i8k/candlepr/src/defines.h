@@ -6,6 +6,8 @@
 #define DISLOT 1
 #define DOSLOT 2
 #define COMPORT 1
+#define COMPORT_BUFFER_LENGTH 100
+#define TOTAL_TIMEOUT 500
 
 #define ALARM_DELAY 1500
 
@@ -74,7 +76,7 @@ typedef struct {
     unsigned long data;
     byte response[256];
     int response_size;
-    int lrc;
+    byte lrc;
 }sModbusPack, *psModbusPack;
 /* Program state
  *

@@ -16,11 +16,12 @@ int log2EEPROM(char*d,char* o,int len){
 }
 byte lrc(byte *buf, int len){
 	byte LRC =0;
-	int i=0;
+	int i;
 	for(i = 1; i < len; i++) {
 		LRC += buf[i];
 	}
-	return (byte)-LRC;
+	LRC=-LRC;
+	return LRC;
 }
 int getRuntime(psRuntimeValues prtv){
     EE_MultiRead(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)prtv);
@@ -46,13 +47,14 @@ int setTotal(sTotalValues tv){
  *
  */
 void ledstr(char *str,int len){
-	int row[5],i=0;
 	Show5DigitLed(1,15);
 	Show5DigitLed(2,13);
 	Show5DigitLed(3,10);
 	Show5DigitLed(4,13);
 	Show5DigitLed(5,10);
 	DelayMs(800);
+
+	Show5DigitLed(1,len%16);
 
 	Show5DigitLed(1,ascii_to_hex((int)str[5]));
 	Show5DigitLed(2,ascii_to_hex((int)str[6]));
@@ -109,6 +111,16 @@ void ledsOff(){
 }
 
 void inwPrint(char *s,...){
-
 	return;
+}
+int str_hex_to_ascii(byte* in,int len,byte* out){
+	byte s[256];
+	int i=0;
+	memset(s,0,256);
+	for(i=0;i<len;i++){
+		s[2*i]=hex_to_ascii[in[i]/16];
+		s[2*i+1]=hex_to_ascii[in[i]%16];
+	}
+	memcpy(out,s,2*len);
+	return 2*len;
 }

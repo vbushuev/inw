@@ -10,7 +10,7 @@ void main(void){
 	int iTime,counter=0,ioLength,io;
 	// scenario control
 	int sstep=0, currentScenario = 0;
-	unsigned long wait_di = 0;
+	//unsigned long wait_di = 0;
 	// DI_DO modules reading buffer
 	unsigned long di_data=0,do_data=0;
 	long encLUp,encLDown,encRUp,encRDown;
@@ -82,6 +82,7 @@ void main(void){
 		 DelayMs(800);
 	}
 	Return:
-		TimerClose();
+		deinitInw();
+
 	return;
 }
