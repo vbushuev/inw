@@ -11,6 +11,7 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv);
 void deinitInw();
 
 int exception(int e);
+int to_bytes(byte *s,int v);
 /*****
  * I\O
  *****/
@@ -26,7 +27,10 @@ int getRuntime(psRuntimeValues prtv);
 int setRuntime(sRuntimeValues rtv);
 int getTotal(psTotalValues ptv);
 int setTotal(sTotalValues tv);
+int getRegisters(int *r);
+int setRegisters(int *r);
 
+// scenario
 int loadMainScenario(sRuntimeValues rtv, sStep * sc);
 int loadStartScenario(sRuntimeValues rtv, sStep * sc);
 int loadInitScenario(sRuntimeValues rtv, sStep * sc);

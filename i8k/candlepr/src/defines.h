@@ -15,6 +15,7 @@
 
 #define EEPROM_RUNTIME 0
 #define EEPROM_TOTAL 1
+#define EEPROM_REGISTERS 2
 
 
 typedef unsigned char  byte;

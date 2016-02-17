@@ -24,7 +24,36 @@ byte lrc(byte *buf, int len){
 	return LRC;
 }
 int getRuntime(psRuntimeValues prtv){
-    EE_MultiRead(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)prtv);
+	byte buf[32];
+	int i=0;
+    EE_MultiRead(EEPROM_RUNTIME,0,32,(byte*)buf);
+	/*int tV10;int tV19;
+	int LC;int Lh;int Lr;
+	int RC;int Rh;int Rr;
+	int L;
+	int R;
+	int tstart;
+	int ttaker;
+	int CL;
+	int CR;
+	int TL;
+	int TR;*/
+	prtv->tV10= buf[i++]*256+buf[i++];
+	prtv->tV19= buf[i++]*256+buf[i++];
+	prtv->LC= buf[i++]*256+buf[i++];
+	prtv->Lh= buf[i++]*256+buf[i++];
+	prtv->Lr= buf[i++]*256+buf[i++];
+	prtv->RC= buf[i++]*256+buf[i++];
+	prtv->Rh= buf[i++]*256+buf[i++];
+	prtv->Rr= buf[i++]*256+buf[i++];
+	prtv->L= buf[i++]*256+buf[i++];
+	prtv->R= buf[i++]*256+buf[i++];
+	prtv->tstart= buf[i++]*256+buf[i++];
+	prtv->ttaker= buf[i++]*256+buf[i++];
+	prtv->CL= buf[i++]*256+buf[i++];
+	prtv->CR= buf[i++]*256+buf[i++];
+	prtv->TL= buf[i++]*256+buf[i++];
+	prtv->TR= buf[i++]*256+buf[i++];
     return 0;
 }
 int setRuntime(sRuntimeValues rtv){
@@ -123,4 +152,11 @@ int str_hex_to_ascii(byte* in,int len,byte* out){
 	}
 	memcpy(out,s,2*len);
 	return 2*len;
+}
+int to_bytes(byte *s,int v){
+	byte c[2];
+	c[0]=v/256;
+	c[1]=v%256;
+	memcpy(s,c,2);
+	return 0;
 }

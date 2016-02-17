@@ -3,7 +3,7 @@
 //#include <8084W.h>
 //#include "candle_structs.h"
 #include "funcs.h"
-
+int gRegisters[128];
 void main(void){
 	int ret;
 	// Timer value
