@@ -1,15 +1,6 @@
 #include "funcs.h"
 extern int gRegisters[128];
-int getRegisters(int *r){
-    EE_MultiRead(EEPROM_REGISTERS,0,256,(int*)r);
-    return 0;
-}
-int setRegisters(int *r){
-    EE_WriteEnable();
-    EE_MultiWrite(EEPROM_REGISTERS,0,256,(int*)r);
-    EE_WriteProtect();
-    return 0;
-}
+
 sModbusPack parse(byte* in){
 	sModbusPack ret;
 	ret.colon=':';

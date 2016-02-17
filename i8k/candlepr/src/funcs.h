@@ -27,8 +27,8 @@ int getRuntime(psRuntimeValues prtv);
 int setRuntime(sRuntimeValues rtv);
 int getTotal(psTotalValues ptv);
 int setTotal(sTotalValues tv);
-int getRegisters(int *r);
-int setRegisters(int *r);
+int getRegisters();
+int setRegisters();
 
 // scenario
 int loadMainScenario(sRuntimeValues rtv, sStep * sc);

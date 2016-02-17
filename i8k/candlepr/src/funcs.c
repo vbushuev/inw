@@ -49,15 +49,7 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
     if(iRet) return iRet;
     iRet = getRuntime(prtv);
     if(iRet) return iRet;
-	//if(prtv->tV10==0){
-		memcpy(prtv,&rtv,sizeof(sRuntimeValues));
-        EE_WriteEnable();
-        memset(fresh,0,256);
-        EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
-        EE_MultiWrite(EEPROM_RUNTIME,sizeof(sRuntimeValues),256-sizeof(sRuntimeValues),fresh);
-        EE_WriteProtect();
-		iRet = setRuntime(rtv);
-	//}
+	getRegisters();
 	// Init leds
 	Init5DigitLed();
 	Show5DigitLed(1,16);
@@ -72,6 +64,7 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 void deinitInw(){
     TimerClose();
     closeComPort();
+    setRegisters()
 }
 /*
  * Start scenario

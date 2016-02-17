@@ -1,4 +1,5 @@
 #include "funcs.h"
+extern int gRegisters[128];
 int exception(int e){
 	inwPrint("Error occurs %i\r\n",e);
 	return 0;
@@ -159,4 +160,14 @@ int to_bytes(byte *s,int v){
 	c[1]=v%256;
 	memcpy(s,c,2);
 	return 0;
+}
+int getRegisters(){
+    EE_MultiRead(EEPROM_REGISTERS,0,256,(int*)gRegisters);
+    return 0;
+}
+int setRegisters(int *r){
+    EE_WriteEnable();
+    EE_MultiWrite(EEPROM_REGISTERS,0,256,(int*)gRegisters);
+    EE_WriteProtect();
+    return 0;
 }
