@@ -64,7 +64,7 @@ int initInw(psRuntimeValues prtv, psTotalValues ptv){
 void deinitInw(){
     TimerClose();
     closeComPort();
-    setRegisters()
+    setRegisters();
 }
 /*
  * Start scenario

@@ -6,3 +6,4 @@ samkoon/
 *.OBJ
 *.eep
 i8k/candlepr/dist/AUTOEXEC.BAT
+i8k/candlepr/eeprom/OUTBUF.txt

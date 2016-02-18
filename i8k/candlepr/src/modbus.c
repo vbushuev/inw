@@ -29,7 +29,7 @@ int serialize(psModbusPack pmb,byte *out){
     i+=pmb->response_size;
     //i+=str_hex_to_ascii(test,10,ret+i);
     //pmb->response_size=10;
-    l=lrc(ret,i);
+    l=lrc(ret+1,i-1);
     pmb->lrc=l;
     i=str_hex_to_ascii(ret+7,i-7,reta+7);
     i+=7;
@@ -42,30 +42,12 @@ int serialize(psModbusPack pmb,byte *out){
     reta[6]=hex_to_ascii[ret[6]];
     reta[i++] = hex_to_ascii[l/16];
 	reta[i++] = hex_to_ascii[l%16];
-
 	reta[i++] = '\r';
 	reta[i++] = '\n';
     memset(out,0,COMPORT_BUFFER_LENGTH);
     memcpy(out,reta,i);
     return i;
 }
-/*int checkLRC(psModbusPack pmb){
-	int lrc;
-	sModbusPack ch;
-	byte c[18];
-	memcpy(&ch,pmb,sizeof(sModbusPack));
-	serialize(&ch,c);
-	lrc = 16*ascii_to_hex(c[13]) + ascii_to_hex(c[14]);
-	Print(c);
-	Show5DigitLed(1,8);
-	if(lrc==pmb->lrc){
-		 leds(0xffff);
-	}else{
-		leds(lrc);
-		leds(pmb->lrc);
-	}
-	return (lrc==pmb->lrc)?0:1;
-}*/
 int analyzeModBus(psModbusPack pmb,byte* outbuf){
 	int ret =0, sl = 0, i=0;
     byte o[COMPORT_BUFFER_LENGTH];
@@ -75,7 +57,8 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
     memset(data,0,COMPORT_BUFFER_LENGTH);
     memset(o,0,COMPORT_BUFFER_LENGTH);
 	switch(pmb->func){
-		case 0x03:{ // read coil registers
+		case 0x03:
+        case 0x04:{ // read coil registers
             //EE_MultiRead(EEPROM_RUNTIME,pmb->reg,2*pmb->data,(byte*)(data));
             for(i=0;i<pmb->data;i++){
                 byte bt[2];
@@ -84,8 +67,11 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
             }
 			pmb->response_size=2*pmb->data;
             sl=serialize(pmb,o);
+            memset(outbuf,0,COMPORT_BUFFER_LENGTH);
             memcpy(outbuf,o,sl);
+            ret = sl;
 		}break;
+        case 0x05:
 		case 0x06:{ // write single register
             gRegisters[pmb->reg] = pmb->data;
             setRegisters(gRegisters);
@@ -98,7 +84,7 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
 	return ret;
 }
 int readModbus(){
-	int ret=0, i=0;
+	int ret=0, i=0,inlen,outlen;
 	byte inbuf[COMPORT_BUFFER_LENGTH],outbuf[COMPORT_BUFFER_LENGTH],response[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
     byte *pbuf;
 	sModbusPack mb;
@@ -111,22 +97,24 @@ int readModbus(){
         if(i>=ret)return 0;
     }
     ret = ret -i;
+    inlen = ret;
     memset(outbuf,0,COMPORT_BUFFER_LENGTH);
     memcpy(outbuf,pbuf,ret);
     outbuf[ret]='\r';
     outbuf[ret+1]='\n';
     mb=parse(pbuf);
-    analyzeModBus(&mb,outbuf);
+    outlen=analyzeModBus(&mb,outbuf);
 	//serialize(&mb,outbuf);
 	ToComStr(COMPORT,outbuf);
 	//ToComStr(COMPORT,":010311112222333344445555F2\r\n");
     //log2EEPROM(inbuf,outbuf,mb.response_size+8);
-    Show5DigitLed(1,17);
-    leds(outbuf[2]*256+outbuf[4]);
+    logCOM(pbuf,inlen,outbuf,outlen);
+    //Show5DigitLed(1,17);
+    //leds(outbuf[2]*256+outbuf[4]);
     //Show5DigitLed(1,14); leds(mb.response_size+8);
 
-	Show5DigitLed(1,12);
-	leds(mb.lrc);
+	//Show5DigitLed(1,12);
+	//leds(mb.lrc);
 
     return ret;
 }

@@ -79,7 +79,7 @@ void main(void){
 		 inwPrint("Program works %i seconds\r\n",iTime);
 		 // for debug mode only
 		 counter++;
-		 DelayMs(800);
+		 //DelayMs(800);
 	}
 	Return:
 		deinitInw();

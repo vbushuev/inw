@@ -1,7 +1,11 @@
+#include <stdio.h>
+#include <stdarg.h>
 #include "funcs.h"
 extern int gRegisters[128];
 int exception(int e){
 	inwPrint("Error occurs %i\r\n",e);
+	Show5DigitLed(1,14);
+    leds(e);
 	return 0;
 }
 int log2EEPROM(char*d,char* o,int len){
@@ -18,7 +22,7 @@ int log2EEPROM(char*d,char* o,int len){
 byte lrc(byte *buf, int len){
 	byte LRC =0;
 	int i;
-	for(i = 1; i < len; i++) {
+	for(i = 0; i < len; i++) {
 		LRC += buf[i];
 	}
 	LRC=-LRC;
@@ -58,14 +62,16 @@ int getRuntime(psRuntimeValues prtv){
     return 0;
 }
 int setRuntime(sRuntimeValues rtv){
-    EE_WriteEnable();
-    EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
+	int r=0;
+	EE_WriteEnable();
+    r=EE_MultiWrite(EEPROM_RUNTIME,0,sizeof(sRuntimeValues),(psRuntimeValues)&rtv);
     EE_WriteProtect();
-    return 0;
+    return (r==-1)?ERROR_EEPROM_WRITE:0;
 }
 int getTotal(psTotalValues ptv){
-    EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
-    return 0;
+	int r=0;
+    r=EE_MultiRead(EEPROM_TOTAL,0,sizeof(sTotalValues),(psTotalValues)ptv);
+    return (r==-1)?ERROR_EEPROM_WRITE:0;
 }
 int setTotal(sTotalValues tv){
     EE_WriteEnable();
@@ -93,6 +99,23 @@ void ledstr(char *str,int len){
 	Show5DigitLed(5,ascii_to_hex((int)str[9]));
 }
 void leds(int s){
+	int p1,p2,p3,p4;
+	if(s<0){
+		Show5DigitLed(2,17);
+		s=-s;
+	}
+		p1 = s/4096;
+		p2 = (s-4096*p1)/256;
+		p3 = (s-4096*p1-p2*256)/16;
+		p4 = (s-4096*p1-p2*256-p3*16);
+		Show5DigitLed(2,p1);
+		Show5DigitLed(3,p2);
+		Show5DigitLed(4,p3);
+		Show5DigitLed(5,p4);
+	DelayMs(800);
+}
+
+void leds2(int s){
 	int p1,p2,p3,p4;
 	if(s<0){
 		Show5DigitLed(2,15);
@@ -139,7 +162,6 @@ void ledsOff(){
 	Show5DigitLed(4,16);
 	Show5DigitLed(5,16);
 }
-
 void inwPrint(char *s,...){
 	return;
 }
@@ -162,12 +184,48 @@ int to_bytes(byte *s,int v){
 	return 0;
 }
 int getRegisters(){
-    EE_MultiRead(EEPROM_REGISTERS,0,256,(int*)gRegisters);
-    return 0;
+	int r=0;
+    r=EE_MultiRead_L(0,256,(int*)gRegisters);
+    return (r==-1)?ERROR_EEPROM_WRITE:0;
 }
-int setRegisters(int *r){
+int setRegisters(){
+	int r=0;
     EE_WriteEnable();
-    EE_MultiWrite(EEPROM_REGISTERS,0,256,(int*)gRegisters);
+    r=EE_MultiWrite_L(0,256,(int*)gRegisters);
     EE_WriteProtect();
-    return 0;
+    return (r==-1)?ERROR_EEPROM_WRITE:0;
+}
+int log(byte*msg,...){
+	//число параметров это функции переменно, концом списк служит значение 0
+	int i=0,r=0;
+	char str[1024];
+	va_list ap; //тип для хранения информации, передаваемой в va_start, va_arg, va_end
+	byte* arg; //очередной целочисленный аргумент
+	va_start(ap, msg); //инициализирует список параметров
+	memset(str,0,sizeof(str));
+	i+=strlen(msg);
+	memcpy(str,msg,i);
+	while ((arg = va_arg(ap,int)) != 0) { //извлекает следующий параметр типа int
+		memcpy(str+i,(byte*)arg,strlen(arg));
+		i+=strlen(arg);
+	}
+	va_end(ap); //очищаем и закрываем список параметров
+	EE_WriteEnable();
+	r=EE_MultiWrite_L(256, 1024, str);
+	EE_WriteProtect();
+	return (r==-1)?ERROR_EEPROM_WRITE:0;
+}
+int logCOM(byte*in,int il,byte*out,int ol){
+	int i=0,r=0;
+	char str[1024];
+	memset(str,0,sizeof(str));
+	memcpy(str+i,"READ[",5); i+=5;
+	memcpy(str+i,in,il);i+=il;
+	memcpy(str+i,"]WRITE[",7); i+=7;
+	memcpy(str+i,out,ol);i+=ol;
+	memcpy(str+i,"]",1); i+=1;
+	EE_WriteEnable();
+	r=EE_MultiWrite_L(256, 1024, str);
+	EE_WriteProtect();
+	return (r==-1)?ERROR_EEPROM_WRITE:0;
 }

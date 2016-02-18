@@ -89,6 +89,10 @@ int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout){
  	}
  	else return 0;
 }
+/*
+	//Opens one file by name.
+	config=GetFileInfoByName("config_2.ini");
+ */
 int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
 	/*
 	 Uses COM port to receive string (fixed data length).
@@ -123,4 +127,163 @@ int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
 	 	}
  	}
  	else return 0;
+}
+unsigned long FSeek(FILE_DATA far *file_pointer,char cMark,unsigned long lStart,int iTh){
+    /*
+    Seeks the iTh(th) cMark from the start position
+    to the EOF(end of file).
+
+    cMark: find the position next to the cMark.
+    lStart: the start position to seek the cMark.
+            (0: start position of the file)
+    iTh: seek the iTh(th) cMark.
+
+    Return value:
+        0: can't find the cMark
+       >0: the offset position next to the cMark
+    */
+
+    char c;
+    unsigned long i;
+    int iOrder;
+
+    i=lStart;
+    iOrder=1;
+
+    while(i<(file_pointer->size-1))
+    {
+        c=file_pointer->addr[i];
+        if(c==cMark)
+            if(iOrder==iTh)
+                return ++i; /* return the position next to the cMark. */
+            else
+                iOrder++;
+        i++;
+    }
+    return 0;
+}
+long GetProFileInt(FILE_DATA far *file_pointer,char* sKeyName,long lDefault){
+    /*
+    If can't find the sKeyName, return the lDefault.
+    If can't find the value of the sKeyName, return the lDefault.
+    */
+
+    unsigned long lPointer=0;
+    char sTemp[20];
+    long lValue;
+    int i;
+    strlwr(sKeyName);
+
+    /* Find  out the Item */
+    while(lPointer<file_pointer->size)
+    {
+        lPointer=FSeek(file_pointer,'*',lPointer,1); /* To find the 1st '*' from lPointer. */
+        if(lPointer==0) /* cannot find '*' */
+            return lDefault;
+        sscanf(file_pointer->addr+lPointer,"%s",&sTemp);
+        strlwr(sTemp);
+        for(i=0;i<strlen(sTemp)-1;i++)
+            if(sTemp[i]=='=')
+            {
+                sTemp[i]=0;
+                break;
+            }
+        /* Read the Value of the Item. */
+        if(!strcmp(sKeyName,sTemp))
+        {
+            lPointer=FSeek(file_pointer,'=',lPointer,1); /* To find the 1st '=' from lPointer. */
+            if(lPointer==0) /* cannot find '=' */
+                return lDefault;
+            sscanf(file_pointer->addr+lPointer,"%ld",&lValue);
+            return lValue;
+        }
+    }
+    /* EOF */
+    return lDefault;
+}
+float GetProFileFloat(FILE_DATA far *file_pointer,char* sKeyName,float fDefault){
+    /*
+    Gets float of sKeyName, the sKeyName in text file must be after one '*'.
+    If can't find the sKeyName, return the fDefault.
+    If can't find the value of the sKeyName, return the fDefault.
+    */
+
+    unsigned long lPointer=0;
+    char sTemp[20];
+    float fValue;
+
+    strlwr(sKeyName);
+
+    /* Find  out the Item. */
+    while(lPointer<file_pointer->size)
+    {
+        lPointer=FSeek(file_pointer,'*',lPointer,1);/* To find the 1st '*' from lPointer */
+        if(lPointer==0) /* cannot find '*' */
+            return fDefault;
+        sscanf(file_pointer->addr+lPointer,"%s",&sTemp);
+        strlwr(sTemp);
+
+        /* Read the Value of the Item. */
+        if(!strcmp(sKeyName,sTemp))
+        {
+            lPointer=FSeek(file_pointer,'=',lPointer,1); /* To find the 1st '=' from lPointer */
+            if(lPointer==0) /* cannot find '=' */
+                return fDefault;
+            sscanf(file_pointer->addr+lPointer,"%f",&fValue);
+            return fValue;
+        }
+    }
+    /* EOF */
+    return fDefault;
+}
+int GetProFileStr(FILE_DATA far *file_pointer,char* sKeyName,char* sResult,char* sDefault){
+    /*
+    If can't find the sKeyName, sResult=sDefault.
+    If can't find the string of the sKeyName, sResult=sDefault.
+    Return value: length of sResult
+    */
+
+    unsigned long lPointer=0;
+    char sTemp[20];
+    int i,iLen;
+
+    strlwr(sKeyName);
+
+    /* Find  out the Item */
+    while(lPointer<file_pointer->size)
+    {
+        lPointer=FSeek(file_pointer,'*',lPointer,1); /* To find the 1st '*' from lPointer */
+        if(lPointer==0) /* cannot find '*' */
+        {
+            strcpy(sResult,sDefault);
+            return strlen(sDefault);
+        }
+        sscanf(file_pointer->addr+lPointer,"%s",&sTemp);
+        strlwr(sTemp);
+        for(i=0;i<strlen(sTemp)-1;i++)
+            if(sTemp[i]=='=')
+            {
+                sTemp[i]=0;
+                break;
+            }
+        /* Read the String of the Item */
+        if(!strcmp(sKeyName,sTemp))
+        {
+            lPointer=FSeek(file_pointer,'=',lPointer,1); /* To find the 1st '*' from lPointer */
+            if(lPointer==0) /* cannot find '=' */
+            {
+                strcpy(sResult,sDefault);
+                return strlen(sResult);
+            }
+            sscanf(file_pointer->addr+lPointer,"%s",&sTemp);
+            if(strlen(sTemp)==0)    /* cannot find string */
+                strcpy(sResult,sDefault);
+            else
+                strcpy(sResult,sTemp);
+            return strlen(sResult);
+        }
+    }
+    /* EOF */
+    strcpy(sResult,sDefault);
+    return strlen(sResult);
 }
