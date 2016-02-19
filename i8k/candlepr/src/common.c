@@ -200,7 +200,7 @@ int log(byte*msg,...){
 	int i=0,r=0;
 	char str[1024];
 	va_list ap; //тип для хранения информации, передаваемой в va_start, va_arg, va_end
-	byte* arg; //очередной целочисленный аргумент
+	byte far * arg; //очередной целочисленный аргумент
 	va_start(ap, msg); //инициализирует список параметров
 	memset(str,0,sizeof(str));
 	i+=strlen(msg);

@@ -7,7 +7,7 @@
 #define DOSLOT 2
 #define COMPORT 1
 #define COMPORT_BUFFER_LENGTH 100
-#define TOTAL_TIMEOUT 500
+#define TOTAL_TIMEOUT 5000
 
 #define ALARM_DELAY 1500
 

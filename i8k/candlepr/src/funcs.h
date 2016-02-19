@@ -7,7 +7,7 @@
 #include "defines.h"
 
 void inwPrint(char *s,...);
-int initInw(psRuntimeValues prtv, psTotalValues ptv);
+int initInw();
 void deinitInw();
 /*****
  * Common
@@ -76,9 +76,9 @@ int getRegisters();
 int setRegisters();
 
 // scenario
-int loadMainScenario(sRuntimeValues rtv, sStep * sc);
-int loadStartScenario(sRuntimeValues rtv, sStep * sc);
-int loadInitScenario(sRuntimeValues rtv, sStep * sc);
+int loadMainScenario( sStep * sc);
+int loadStartScenario( sStep * sc);
+int loadInitScenario( sStep * sc);
 
 int readModbus();
 int str_hex_to_ascii(byte* in,int len,byte* out);

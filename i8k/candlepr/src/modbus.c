@@ -53,7 +53,8 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
     byte o[COMPORT_BUFFER_LENGTH];
     byte data[COMPORT_BUFFER_LENGTH];
     int registers[128];
-    getRegisters(registers);
+    ret = getRegisters(registers);
+    if(ret!=0)exception(ret);
     memset(data,0,COMPORT_BUFFER_LENGTH);
     memset(o,0,COMPORT_BUFFER_LENGTH);
 	switch(pmb->func){
@@ -74,7 +75,8 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
         case 0x05:
 		case 0x06:{ // write single register
             gRegisters[pmb->reg] = pmb->data;
-            setRegisters(gRegisters);
+            ret = setRegisters(gRegisters);
+            if(ret!=0)exception(ret);
 		}break;
 	}
     /*Show5DigitLed(1,10); leds(pmb->addr);//addr
