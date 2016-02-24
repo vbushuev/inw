@@ -82,6 +82,7 @@ int loadInitScenario( sStep * sc);
 
 int readModbus();
 int str_hex_to_ascii(byte* in,int len,byte* out);
+void ledn(int n,unsigned int s);
 void leds(int s);
 void ledstr(char *str,int len);
 void ledsOff();

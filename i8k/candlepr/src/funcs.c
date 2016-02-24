@@ -18,8 +18,7 @@ int initInw(){
     // i8000 has only one systimer
 	TimerOpen();
 	TimerResetValue();
-    // Registers from EEPROM
-    getRegisters();
+
 	//InitEncoder
 	iRet=i8080_InitDriver(ECSLOT);
     if (iRet==(-1)) return ERROR_ENCODER_NOTFOUND;
@@ -51,6 +50,11 @@ int initInw(){
 	Show5DigitLed(5,16);
 	// Init ComPort
     initComPort();
+    // Registers from EEPROM
+    getRegisters();
+    gRegisters[0x21] = 0;
+    gRegisters[0x25] = (gRegisters[0x25]*1000<TOTAL_TIMEOUT)?TOTAL_TIMEOUT:gRegisters[0x25];
+    ClearSystemKey();
     return 0;
 }
 void deinitInw(){
@@ -65,7 +69,7 @@ void deinitInw(){
  * Work scenario automate
  */
 int loadMainScenario(sStep * sc){
-     /*sStep scenatioW[]={
+     /*sStep scenarioW[]={
          {0x00000002,{0,0x00000002},0x00000000,0},  //00    убираем засыпку V2 -> A2
          {0x00000008,{0,0x00000008},0x00000000,0},  //01    верхний поршень прижимает V4 -> A4
          {0x00000410,{2,0},0x00000000,0},      //02    нижний поршень прижимает и отпускает фитиль(V11) V5->LS
@@ -94,7 +98,7 @@ int loadMainScenario(sStep * sc){
 
          {0x00000000,{4,0x00000000},0x00000000,0}   //23    Произвести фиксацию замеров для левого
      };*/
-	 sStep scenatioW[] = {
+	 sStep scenarioW[] = {
 		 {0x00000002,{0,0x00002146},0x00000000,0},//00
 		 {0x00000008,{0,0x0000214a},0x00000000,0},//01
 		 {0x00000410,{2,0x0000214a/*rtv.LC*/},0x00000000,0},//02
@@ -123,22 +127,22 @@ int loadMainScenario(sStep * sc){
 
 		 {0x00000000,{4,0x00002145},0x00000000,0},  //12    Произвести фиксацию замеров для левого
 	 };
-     scenatioW[2].wait.value = gRegisters[0x02];
-     scenatioW[7].wait.value = gRegisters[0x0b];
-     scenatioW[8].wait.value = gRegisters[0x03];
-     scenatioW[9].wait.value = gRegisters[0x00];
-     scenatioW[14].wait.value = gRegisters[0x04];
-     scenatioW[19].wait.value = gRegisters[0x0b];
-     scenatioW[20].wait.value = gRegisters[0x05];
-     scenatioW[21].wait.value = gRegisters[0x01];
-     memcpy(sc,scenatioW,sizeof(scenatioW));
+     scenarioW[2].wait.value = gRegisters[0x02];
+     scenarioW[7].wait.value = gRegisters[0x0b];
+     scenarioW[8].wait.value = gRegisters[0x03];
+     scenarioW[9].wait.value = gRegisters[0x00];
+     scenarioW[14].wait.value = gRegisters[0x04];
+     scenarioW[19].wait.value = gRegisters[0x0b];
+     scenarioW[20].wait.value = gRegisters[0x05];
+     scenarioW[21].wait.value = gRegisters[0x01];
+     memcpy(sc,scenarioW,sizeof(scenarioW));
      return 0;
 }
 /*
  * Start scenario automate
  */
 int loadStartScenario(sStep * sc){
-	sStep scenatioW[]={
+	sStep scenarioW[]={
 		{0x00000001,{0,0x00000001},0x00000000,0},//00
 		{0x00000002,{0,0x00004000},0x00000000,0},//01
 		{0x00000044,{0,0x00004044},0x00000000,0},//02
@@ -148,24 +152,24 @@ int loadStartScenario(sStep * sc){
 		{0x00012000,{0,0x00006944},0x00000000,0},//06
 		{0x00014000,{2,/*rtv.Rh*/},0x00000000,0},//07
 	 };
-	 scenatioW[4].wait.value = gRegisters[0x03];
-     scenatioW[7].wait.value = gRegisters[0x05];
-	 memcpy(sc,scenatioW,sizeof(scenatioW));
+	 scenarioW[4].wait.value = gRegisters[0x03];
+     scenarioW[7].wait.value = gRegisters[0x05];
+	 memcpy(sc,scenarioW,sizeof(scenarioW)*sizeof(sStep));
      return 0;
  }
 /*
  * Init scenario automate
  */
 int loadInitScenario(sStep * sc){
-	sStep scenatioW[]={
+	sStep scenarioW[]={
 		{0x00000020,{2,0/*rtv.Lh*/},0x00000000,0},//00
 		{0x00000001,{0,0x00002945},0x00000000,0},//01
 		{0x00002000,{2,0x00002145/*rtv.Rh*/},0x00000000,0},//02
 		{0x00000000,{1,0x00002145/*rtv.tstart*/},0x00000000,0},//03
 	 };
-	 scenatioW[0].wait.value = gRegisters[0x03];
-     scenatioW[2].wait.value = gRegisters[0x05];
-     scenatioW[3].wait.value = gRegisters[0x0a];
-	 memcpy(sc,scenatioW,sizeof(scenatioW));
+	 scenarioW[0].wait.value = gRegisters[0x03];
+     scenarioW[2].wait.value = gRegisters[0x05];
+     scenarioW[3].wait.value = gRegisters[0x0a];
+	 memcpy(sc,scenarioW,sizeof(scenarioW));
      return 0;
  }

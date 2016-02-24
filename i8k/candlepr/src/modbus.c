@@ -3,7 +3,7 @@ extern int gRegisters[128];
 
 sModbusPack parse(byte* in){
 	sModbusPack ret;
-	ret.colon=':';
+    ret.colon=':';
 	ret.addr=16*ascii_to_hex(in[1]) + ascii_to_hex(in[2]);
 	ret.func=16*ascii_to_hex(in[3]) + ascii_to_hex(in[4]);
 	ret.reg	=4096*ascii_to_hex(in[5]) + 256*ascii_to_hex(in[6]) + 16*ascii_to_hex(in[7]) + ascii_to_hex(in[8]);
@@ -48,7 +48,44 @@ int serialize(psModbusPack pmb,byte *out){
     memcpy(out,reta,i);
     return i;
 }
-int analyzeModBus(psModbusPack pmb,byte* outbuf){
+int analyzeModBusASCII(psModbusPack pmb,byte* outbuf){
+	int ret =0, sl = 0, i=0;
+    byte o[COMPORT_BUFFER_LENGTH];
+    byte data[COMPORT_BUFFER_LENGTH];
+    int registers[128];
+    ret = getRegisters(registers);
+    if(ret!=0)exception(ret);
+    memset(data,0,COMPORT_BUFFER_LENGTH);
+    memset(o,0,COMPORT_BUFFER_LENGTH);
+	switch(pmb->func){
+		case 0x03:
+        case 0x04:{ // read coil registers
+            //EE_MultiRead(EEPROM_RUNTIME,pmb->reg,2*pmb->data,(byte*)(data));
+            for(i=0;i<pmb->data;i++){
+                byte bt[2];
+                to_bytes(bt,gRegisters[pmb->reg+i]);
+                memcpy(pmb->response+(2*i),bt,2);
+            }
+			pmb->response_size=2*pmb->data;
+            sl=serialize(pmb,o);
+            memset(outbuf,0,COMPORT_BUFFER_LENGTH);
+            memcpy(outbuf,o,sl);
+            ret = sl;
+		}break;
+        case 0x05:
+		case 0x06:{ // write single register
+            gRegisters[pmb->reg] = pmb->data;
+            ret = setRegisters(gRegisters);
+            if(ret!=0)exception(ret);
+		}break;
+	}
+    /*Show5DigitLed(1,10); leds(pmb->addr);//addr
+	Show5DigitLed(1,15); leds(pmb->func);
+	Show5DigitLed(1,13); leds(pmb->reg);
+	Show5DigitLed(1,17); leds(pmb->data);*/
+	return ret;
+}
+int analyzeModBus(psModbusPack pmb,byte *inbuf,int len,byte* outbuf){
 	int ret =0, sl = 0, i=0;
     byte o[COMPORT_BUFFER_LENGTH];
     byte data[COMPORT_BUFFER_LENGTH];
@@ -88,29 +125,27 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
 int readModbus(){
 	int ret=0, i=0,inlen,outlen;
 	byte inbuf[COMPORT_BUFFER_LENGTH],outbuf[COMPORT_BUFFER_LENGTH],response[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
-    byte *pbuf;
+	byte *pbuf;
 	sModbusPack mb;
 	ret = Receive_Data(inbuf,0xa,TOTAL_TIMEOUT);
     if(ret<=0) return 0;
-    pbuf =inbuf;
+	pbuf=inbuf;
 	while(*pbuf!=':'){
         pbuf++;
-        i++;
-        if(i>=ret)return 0;
+		i++;
+		if(i>=ret)return 0;
     }
-    ret = ret -i;
-    inlen = ret;
-    memset(outbuf,0,COMPORT_BUFFER_LENGTH);
-    memcpy(outbuf,pbuf,ret);
+    mb=parse(pbuf);
+	memset(outbuf,0,COMPORT_BUFFER_LENGTH);
+    memcpy(outbuf,inbuf,ret);
     outbuf[ret]='\r';
     outbuf[ret+1]='\n';
-    mb=parse(pbuf);
-    outlen=analyzeModBus(&mb,outbuf);
+    outlen=analyzeModBusASCII(&mb,outbuf);
 	//serialize(&mb,outbuf);
 	ToComStr(COMPORT,outbuf);
 	//ToComStr(COMPORT,":010311112222333344445555F2\r\n");
     //log2EEPROM(inbuf,outbuf,mb.response_size+8);
-    logCOM(pbuf,inlen,outbuf,outlen);
+    //logCOM(pbuf,inlen,outbuf,outlen);
     //Show5DigitLed(1,17);
     //leds(outbuf[2]*256+outbuf[4]);
     //Show5DigitLed(1,14); leds(mb.response_size+8);
@@ -120,20 +155,56 @@ int readModbus(){
 
     return ret;
 }
-
-
 int readModbusRTU(){
-	int ret = 0,i=0;
-	char inbuf[256];
-	for(i=0;i<256;++i)inbuf[i]=0x00; //init buf
-	i=0;
-	while(Kbhit()){
-		inbuf[i]=Getch();
-		ret = ascii_to_hex(inbuf[i]);
-		Show5DigitLed(1,12);
-		leds(ret);
-		i++;
+	int ret=0, i=0,inlen,outlen;
+	unsigned int crc;
+	byte in[COMPORT_BUFFER_LENGTH],out[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
+	sModbusPack mb;
+	// clean buffers
+	memset(in,0,COMPORT_BUFFER_LENGTH);
+	memset(out,0,COMPORT_BUFFER_LENGTH);
+	// receive data
+	ret = Receive_Data_Length(in,8,200);
+	//ret = Receive_Data(in,0xa,TOTAL_TIMEOUT);
+    if(ret<=0) return 0;
+	//parse data
+	mb.addr = in[0];
+	mb.func = in[1];
+	mb.reg	= in[2]*256 + in[3];
+	mb.data = in[4]*256 + in[5];
+	mb.lrc	= in[6]*256 + in[7];
+	/*ledn(0xa,mb.addr);DelayMs(600);
+	ledn(0xf,mb.func);DelayMs(600);
+	ledn(16,mb.reg);DelayMs(600);
+	ledn(0xd,mb.data);DelayMs(600);*/
+	switch(mb.func){
+		case 0x03:
+        case 0x04:{ // read coil registers
+            //EE_MultiRead(EEPROM_RUNTIME,pmb->reg,2*pmb->data,(byte*)(data));
+			out[0] = mb.addr;
+			out[1] = mb.func;
+			out[2] = 2*mb.data;
+            for(i=0;i<mb.data;i++){
+                byte bt[2];
+                to_bytes(bt,gRegisters[mb.reg+i]);
+                memcpy(out+3+(2*i),bt,2);
+            }
+			mb.response_size=2*mb.data;
+			crc=CRC16(out,mb.response_size+3);
+			//ledn(0xc,crc);
+		    mb.lrc=crc;
+			out[mb.response_size+3] = crc%256;
+			out[mb.response_size+4] = crc/256;
+			ret = mb.response_size+5;
+		}break;
+        case 0x05:
+		case 0x06:{ // write single register
+			memcpy(out,in,ret);
+			gRegisters[mb.reg] = mb.data;
+            setRegisters();
+		}break;
 	}
-	ret = i;
-	return ret;
+	ToComBufn(COMPORT,out,ret);
+	DelayMs(40);
+    return ret;
 }
