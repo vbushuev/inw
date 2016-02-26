@@ -218,10 +218,12 @@ void main(void){
 				 break;
 			 }
 			 case 0x80: {// Stop Signal
+				currentScenario = 0;
 				sstep = 0;
 				sstage = 0;
 				todo = 0;
-				bDO = 0;
+				bDO = 1;
+				do_data = 0;
 				finished = 1;
 				gRegisters[0x20] = 0;
 			 }break;
