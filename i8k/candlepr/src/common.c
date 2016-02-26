@@ -3,8 +3,35 @@
 #include "funcs.h"
 extern int gRegisters[128];
 int exception(int e){
-	inwPrint("Error occurs %i\r\n",e);
+	e = -e;
+	gRegisters[0x1f] = e;
     ledn(14,e);
+	return 0;
+}
+int showError(){
+	int e = gRegisters[0x1f];
+	if(e==0){
+		Show5DigitLed(1,16);
+	    Show5DigitLed(2,16);
+	    Show5DigitLed(3,16);
+	    Show5DigitLed(4,16);
+	    Show5DigitLed(5,16);
+		gRegisters[0x27] = 5;
+	}else{
+		/* Screen ctrl
+		 * 0 - Start screen
+		 * 1 - Splash
+		 * 2 - Left piston
+		 * 3 - Right piston
+		 * 4 - Global settings
+		 * 5 - Main
+		 * 6 - Settings
+		 * 7 - Loading
+		 * 8 - Alarm
+		 */
+		gRegisters[0x27] = 8;
+    	ledn(14,e);
+	}
 	return 0;
 }
 int log2EEPROM(char*d,char* o,int len){
@@ -101,10 +128,6 @@ void ledstr(char *str,int len){
 void ledn(int n,unsigned int s){
 	int p1,p2,p3,p4;
 	Show5DigitLedWithDot(1,n);
-	if(s<0){
-		Show5DigitLed(2,17);
-		s=-s;
-	}
 	p1 = s/4096;
 	p2 = (s-4096*p1)/256;
 	p3 = (s-4096*p1-p2*256)/16;
@@ -200,6 +223,13 @@ int to_bytes(byte *s,int v){
 	memcpy(s,c,2);
 	return 0;
 }
+int to_bytes_i(byte *s,int v){
+	byte c[2];
+	c[1]=v/256;
+	c[0]=v%256;
+	memcpy(s,c,2);
+	return 0;
+}
 int getRegisters(){
 	int r=0;
     r=EE_MultiRead_L(0,256,(int*)gRegisters);
@@ -212,7 +242,7 @@ int setRegisters(){
     EE_WriteProtect();
     return (r==-1)?ERROR_EEPROM_WRITE:0;
 }
-int log(byte*msg,...){
+/*int log(byte*msg,...){
 	//число параметров это функции переменно, концом списк служит значение 0
 	int i=0,r=0;
 	char str[1024];
@@ -231,7 +261,7 @@ int log(byte*msg,...){
 	r=EE_MultiWrite_L(256, 1024, str);
 	EE_WriteProtect();
 	return (r==-1)?ERROR_EEPROM_WRITE:0;
-}
+}*/
 int logCOM(byte*in,int il,byte*out,int ol){
 	int i=0,r=0;
 	char str[1024];

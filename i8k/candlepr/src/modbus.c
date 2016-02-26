@@ -85,7 +85,7 @@ int analyzeModBusASCII(psModbusPack pmb,byte* outbuf){
 	Show5DigitLed(1,17); leds(pmb->data);*/
 	return ret;
 }
-int analyzeModBus(psModbusPack pmb,byte *inbuf,int len,byte* outbuf){
+int analyzeModBus(psModbusPack pmb,byte* outbuf){
 	int ret =0, sl = 0, i=0;
     byte o[COMPORT_BUFFER_LENGTH];
     byte data[COMPORT_BUFFER_LENGTH];
@@ -95,9 +95,25 @@ int analyzeModBus(psModbusPack pmb,byte *inbuf,int len,byte* outbuf){
     memset(data,0,COMPORT_BUFFER_LENGTH);
     memset(o,0,COMPORT_BUFFER_LENGTH);
 	switch(pmb->func){
+		case 0x01:
+		case 0x02:{// read coil registers
+			int rs = pmb->reg/8;
+			int tail = pmb->data%8;
+			rs+=pmb->data/8;
+			rs+=(tail>0)?1:0;
+			for(i=0;i<rs;i++){
+                byte bt[2];
+                to_bytes(bt,gRegisters[pmb->reg+i]);
+                memcpy(pmb->response+(2*i),bt,2);
+            }
+			pmb->response_size=2*pmb->data;
+            sl=serialize(pmb,o);
+            memset(outbuf,0,COMPORT_BUFFER_LENGTH);
+            memcpy(outbuf,o,sl);
+            ret = sl;
+		}break;
 		case 0x03:
-        case 0x04:{ // read coil registers
-            //EE_MultiRead(EEPROM_RUNTIME,pmb->reg,2*pmb->data,(byte*)(data));
+        case 0x04:{ // read hold registers
             for(i=0;i<pmb->data;i++){
                 byte bt[2];
                 to_bytes(bt,gRegisters[pmb->reg+i]);
@@ -135,6 +151,7 @@ int readModbus(){
 		i++;
 		if(i>=ret)return 0;
     }
+	ret-=i;
     mb=parse(pbuf);
 	memset(outbuf,0,COMPORT_BUFFER_LENGTH);
     memcpy(outbuf,inbuf,ret);
@@ -178,9 +195,31 @@ int readModbusRTU(){
 	ledn(16,mb.reg);DelayMs(600);
 	ledn(0xd,mb.data);DelayMs(600);*/
 	switch(mb.func){
+		case 0x01:
+		case 0x02:{// read coil registers
+			int tail=mb.data%8,ir=0;
+			out[0] = mb.addr;
+			out[1] = mb.func;
+			out[2] = (mb.data/8) + ((tail>0)?1:0);
+			mb.response_size=(int)out[2];
+			for(i=0;i<mb.response_size;i++){
+				byte bt[2];
+                to_bytes_i(bt,gRegisters[mb.reg+i]);
+				memcpy(out+3+(2*i),bt,2);
+            }
+			if(tail>0){
+				out[mb.response_size+2] <<= (8-tail);
+				out[mb.response_size+2] >>= (8-tail);
+			}
+			crc=CRC16(out,mb.response_size+3);
+			//ledn(0xc,crc);
+		    mb.lrc=crc;
+			out[mb.response_size+3] = crc%256;
+			out[mb.response_size+4] = crc/256;
+			ret = mb.response_size+5;
+		}break;
 		case 0x03:
         case 0x04:{ // read coil registers
-            //EE_MultiRead(EEPROM_RUNTIME,pmb->reg,2*pmb->data,(byte*)(data));
 			out[0] = mb.addr;
 			out[1] = mb.func;
 			out[2] = 2*mb.data;

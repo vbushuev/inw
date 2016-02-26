@@ -6,24 +6,60 @@
 #include <stdio.h>
 #include "defines.h"
 
+/******************************************************************************
+ * Funcs
+ ******************************************************************************/
 void inwPrint(char *s,...);
 int initInw();
 void deinitInw();
-/*****
+/******************************************************************************
  * Common
- *****/
-int log(byte*msg,...);
+ ******************************************************************************/
+/*int log(byte*msg,...);*/
 int logCOM(byte*in,int il,byte*out,int ol);
 int exception(int e);
+int showError();
 int to_bytes(byte *s,int v);
-/*****
+int to_bytes_i(byte *s,int v);
+void ledn(int n,unsigned int s);
+void leds(int s);
+void ledstr(char *str,int len);
+void ledsOff();
+/******************************************************************************
  * I\O
- *****/
+ ******************************************************************************/
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
-int readEncoderL(long *up,long *down);
-int readEncoderR(long *up,long *down);
+int InitEncoder();
+int Encoder(int piston,unsigned long *data);
+/*
+ Uses COM port to receive data with a terminative char.
+ COMPORT:    COM port number to receive data.
+           0:COM0, 1:COM1, 2:COM2  .....
+ *cInBuf:  Input buffer to receive data.
+ cTerminator: what is the last byte ?
+ lTimeout: timeout to receive data. (Unit: ms)
+           The timeout is measured from last received byte
+           to the terminator.
+ return: >0 :length of received data
+          0 :doen't receive any data
+         -1 :timeout
+*/
 int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout);
+/*
+ Uses COM port to receive string (fixed data length).
+
+ COMPORT:    COM port number to receive data.
+           0:COM0, 1:COM1, 2:COM2  .....
+ *cInBuf:  Input buffer to receive data.
+ iLength:  how many bytes to receive?
+ lTimeout: timeout to receive data. (Unit: ms)
+           The timeout is measured from last received byte
+           to receive whole data.
+ return: >0 :length of received data
+          0 :doen't receive any data
+         -1 :timeout
+*/
 int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout);
 /*
     Seeks the iTh(th) cMark from the start position
@@ -65,9 +101,9 @@ float GetProFileFloat(FILE_DATA far *file_pointer,char* sKeyName,float fDefault)
  */
 int GetProFileStr(FILE_DATA far *file_pointer,char* sKeyName,char* sResult,char* sDefault);
 
-
-//int readEncoder(int channel,long *data);
-// EEPROM
+/******************************************************************************
+ * EEPROM
+ ******************************************************************************/
 int getRuntime(psRuntimeValues prtv);
 int setRuntime(sRuntimeValues rtv);
 int getTotal(psTotalValues ptv);
@@ -75,18 +111,10 @@ int setTotal(sTotalValues tv);
 int getRegisters();
 int setRegisters();
 
-// scenario
-int loadMainScenario( sStep * sc);
-int loadStartScenario( sStep * sc);
-int loadInitScenario( sStep * sc);
-
+/******************************************************************************
+ * ModBus implementation
+ ******************************************************************************/
 int readModbus();
 int str_hex_to_ascii(byte* in,int len,byte* out);
-void ledn(int n,unsigned int s);
-void leds(int s);
-void ledstr(char *str,int len);
-void ledsOff();
-    // Uses COM port to receive data with a terminative char.
-    // If time between two byte grater than lTimeout, abort receiving.
 
 #endif

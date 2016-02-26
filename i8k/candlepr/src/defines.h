@@ -18,7 +18,10 @@
 #define EEPROM_REGISTERS 2
 
 
-typedef unsigned char  byte;
+typedef unsigned char byte;
+typedef unsigned int word;
+typedef unsigned long dword;
+
 
 #pragma pack(push,1)
 // script struct

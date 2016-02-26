@@ -4,9 +4,7 @@
 //#include "candle_structs.h"
 #include "funcs.h"
 int gRegisters[128];
-sStep initScenario[8];
-sStep startScenario[8];
-sStep mainScenario[8];
+
 void (far *Reset_Program)(void)=0xFFFF0000L; //Program start address.
 void main(void){
 	int ret;
@@ -15,9 +13,9 @@ void main(void){
 	//
 	byte oldKey;
 	// scenario control
-	int sstep=0, sstage = 0, todo = 0, finished = 1, currentPiston=0 /* 0 -left, 1 -right*/,bDO = 0, stepsInCirce;
+	int sstep=0, sstage = 0, todo = 0, finished = 1,bDO = 0, stepsInCirce;
 	// DI_DO modules reading buffer
-	unsigned long di_data=0,do_data=0,iTimeout=0,iCircleTime = 0;
+	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data;
 	long encLUp,encLDown,encRUp,encRDown,ulto;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
@@ -30,7 +28,7 @@ void main(void){
 	sStep far *currentScenario = 0;
 	// Start
 	ret = initInw();
-	if(ret)if(exception(ret))goto Return;
+	if(ret)exception(ret);
 
 	// Help messages to Console
 	// inwPrint("Please command (q-quit,c-clear)=");
@@ -44,12 +42,12 @@ void main(void){
 		 **************************************************************************/
 		 // DI module reading
 		 ret = readSignals(&di_data);
-		 if(ret){exception(ret);continue;}
+		 if(ret)exception(ret);
 		 // Read Encoders
-		 ret = readEncoderL(&encLUp,&encLDown);
-		 if(ret){exception(ret);continue;}
-		 ret = readEncoderR(&encRUp,&encRDown);
-		 if(ret){exception(ret);continue;}
+		 ret = Encoder(0,&enc_data);
+		 if(ret!=0)exception(ret);
+		 ret = Encoder(1,&enc_data);
+		 if(ret!=0)exception(ret);
 		 // read Panel
 		 oldCommand = gRegisters[0x20];
 		 readModbusRTU();
@@ -94,7 +92,7 @@ void main(void){
 				sstep = 0;
 				sstage = 0;
 				todo = 1;
-				currentPiston = 0;
+				gRegisters[0x30] = 0;
 				finished = 0;
 				gRegisters[0x08] = 1;
 				gRegisters[0x09] = 1;
@@ -123,7 +121,7 @@ void main(void){
 				sstep = 0;
 				sstage = 0;
 				todo = 1;
-				currentPiston = 0;
+				gRegisters[0x30] = 0;
 				gRegisters[0x08] = 1;
 				gRegisters[0x09] = 1;
 				gRegisters[0x0c] = 0;
@@ -174,7 +172,7 @@ void main(void){
 				sstep = 0;
 				sstage = 0;
 				todo = 1;
-				currentPiston = 0;
+				gRegisters[0x30] = 0;
 				gRegisters[0x0c] = 0;
 				gRegisters[0x0d] = 0;
 				gRegisters[0x0e] = 0;
@@ -182,30 +180,33 @@ void main(void){
 				iCircleTime = 0;
 			 }break;
 			 case 0x06:{
-				 sStep scenarioW[] = {
- 					{0x00000002,{1,0x00000fa0},0x00000000,0},//00 wait for 4000 seconds
- 					{0x00000003,{0,0x00000003},0x00000000,0},//00 wait for DI = 0x0003
- 					{0x00000004,{0,0x00000004},0x00000000,0},//00 wait for DI = 0x0004
- 				  	{0x00000000,{3,0x00000000},0x00000000,0},  // finish
- 				  	{0x00000000,{4,0x00000000},0x00000000,0},  // finish
- 				  	{0x00000000,{5,0x00000000},0x00000000,0}  // finish
- 			  	 };
-				 stepsInCirce = 6;
-				 di_data = gRegisters[0x40];
-				 encLUp = gRegisters[0x42];
-				 encRUp = gRegisters[0x43];
- 				 if(!finished)break;
-				 finished = 0;
-				 currentScenario = scenarioW;
-				 sstep = 0;
- 				 sstage = 0;
- 				 todo = 1;
- 				 currentPiston = 0;
- 				 gRegisters[0x0c] = 0;
- 				 gRegisters[0x0d] = 0;
- 				 gRegisters[0x0e] = 0;
- 				 gRegisters[0x0f] = 0;
- 				 iCircleTime = 0;
+				 di_data = gRegisters[0x21];
+				 encLUp = gRegisters[0x23];
+				 encRUp = gRegisters[0x24];
+ 				 if(finished==1){
+					 sStep scenarioW[] = {
+	 					{0x00000002,{1,0x00000fa0},0x00000000,0},//00 wait for 4000 seconds
+	 					{0x00000003,{0,0x00000003},0x00000000,0},//01 wait for DI = 0x0003
+	 					{0x00000004,{0,0x00000004},0x00000000,0},//02 wait for DI = 0x0004
+	 					{0x00000005,{2,0x00000100},0x00000000,0},//03 wait for Encoder L = 0x100
+						{0x00000000,{3,0x00000000},0x00000000,0},//04 finish
+						{0x00000006,{2,0x00000200},0x00000000,0},//05 wait for Encoder R = 0x200
+	 				  	{0x00000000,{4,0x00000000},0x00000000,0},//06 finish
+	 				  	{0x00000000,{5,0x00000000},0x00000000,0} //07 finish
+	 			  	 };
+					 stepsInCirce = 8;
+					 finished = 0;
+					 currentScenario = scenarioW;
+					 sstep = 0;
+	 				 sstage = 0;
+	 				 todo = 1;
+	 				 gRegisters[0x30] = 0;
+	 				 gRegisters[0x0c] = 0;
+	 				 gRegisters[0x0d] = 0;
+	 				 gRegisters[0x0e] = 0;
+	 				 gRegisters[0x0f] = 0;
+	 				 iCircleTime = 0;
+				 }
 				 break;
 			 }
 			 case 0x7f: {// manual mode
@@ -248,7 +249,7 @@ void main(void){
 						// счетчик пробега
 						gRegisters[0x10]++;
 	   				 	gRegisters[0x12] += ict;
-						currentPiston = 1;
+						gRegisters[0x30] = 1;
 					}
 					else if(currentScenario[sstep].wait.type==4){
 						int ict = 0;
@@ -265,7 +266,7 @@ void main(void){
 						// счетчик пробега
 						gRegisters[0x11]++;
 	   				 	gRegisters[0x13] += ict;
-						currentPiston = 0;
+						gRegisters[0x30] = 0;
 					}
 					else if(currentScenario[sstep].wait.type==5){
 						finished = 1;
@@ -285,15 +286,24 @@ void main(void){
 				 case 1:{
 					 byte flag = 0;
 					 switch(currentScenario[sstep].wait.type){
-						case 1: // Timeout wait
+						 case 0: // wait for special DI signals
+ 							flag = (di_data == currentScenario[sstep].wait.value)?1:0;
+							if(di_data&0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+							if(di_data&0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+ 							break;
+						 case 1: // Timeout wait
 							flag = ( (TimerReadValue()-iTimeout)>= currentScenario[sstep].wait.value) ? 1 : 0;
 							break;
-						case 2: // Encoder wait
-							flag = (((currentPiston==0)&&(encLDown /*encLUp*/ >= currentScenario[sstep].wait.value)) || ((currentPiston==1)&&(encRDown /*encRUp*/ >= currentScenario[sstep].wait.value)))?1:0;
-							break;
-						case 0: // wait for special DI signals
-						default:
-							flag = (di_data == currentScenario[sstep].wait.value)?1:0;
+						 case 2: // Encoder wait
+							flag = (
+								(
+									(gRegisters[0x30]==0)&&(gRegisters[0x23] >= currentScenario[sstep].wait.value)
+								)
+								||
+								(
+									(gRegisters[0x30]==1)&&(gRegisters[0x24] >= currentScenario[sstep].wait.value)
+								)
+							)?1:0;
 							break;
 					 }
 					 if(flag==1){
@@ -306,6 +316,7 @@ void main(void){
 						 if((TimerReadValue()-iTimeout) >= gRegisters[0x25]*1000){
 							 //alarm
 							 gRegisters[0x20] = 0x80;
+							 exception(ERROR_ALARM_DELAY);
 						 }
 					 }
 					 break;
@@ -325,13 +336,13 @@ void main(void){
 			 }
 		 }
 		 //ledn(17,(TimerReadValue()-iTimeout));
-		 if(currentScenario!=0)ledn(16,currentScenario[sstep].wait.type*256+sstep*16+sstage);
+		 //if(currentScenario!=0)ledn(16,currentScenario[sstep].wait.type*256+sstep*16+sstage);
 		 /**************************************************************************
  		 * command section
  		 **************************************************************************/
 		 if(bDO){
 			 ret = sendCommand(do_data);
-			 if(ret)if(exception(ret))goto Return;
+			 if(ret)exception(ret);
 			 bDO = 0;
 		 }
 		 /**************************************************************************
@@ -344,13 +355,11 @@ void main(void){
 		 // Self analyze
 		 //iTime=TimerReadValue();
 		 // for debug mode only
-		 gRegisters[0x26] = (int)(TimerReadValue()%65536);
-		 gRegisters[0x27] = (int)(iTimeout%65536);
-		 gRegisters[0x28] = counter;
-		 gRegisters[0x29] = (int)(currentScenario[sstep].wait.value);
-		 gRegisters[0x2A] = (int)(ulto);
+		 //gRegisters[0x25] = (int)(TimerReadValue()%65536);
+		 gRegisters[0x26] = (int)(iTimeout%65536);
 		 counter++;
 		 //DelayMs(800);
+		 showError();
 	}
 	Return:
 		deinitInw();

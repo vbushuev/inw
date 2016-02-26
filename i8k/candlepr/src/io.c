@@ -1,4 +1,8 @@
 #include "funcs.h"
+extern int gRegisters[128];
+/******************************************************************************
+ * DI/DO
+ ******************************************************************************/
 int sendCommand(unsigned long command){
 	DO_32(DOSLOT,command);
 	inwPrint("DO data = %-08lX\n\r",command);
@@ -11,26 +15,80 @@ int readSignals(unsigned long *data){
 	inwPrint("DI data = %08X\n\r",data);
 	return 0;
 }
-int readEncoderL(long *up,long *down){
-    int ret=0;
-    ret = readEncoder(0,up);
-    if(ret)return ret;
-    ret = readEncoder(1,down);
-    return ret;
+/******************************************************************************
+ * Encoder section
+ ******************************************************************************/
+int clearEncoder(int piston){
+	i8080_ClrCnt(ECSLOT,piston);
+	gRegisters[0x23+piston] = 0;
+	gRegisters[0x29+2*piston] = 0; // save old position;
+	gRegisters[0x28+2*piston] = 0; // current position;
+	return 0;
 }
-int readEncoderR(long *up,long *down){
-    int ret=0;
-    ret = readEncoder(2,up);
-    if(ret)return ret;
-    ret = readEncoder(3,down);
-    return ret;
+int InitEncoder(){
+	int channel;
+	for (channel=0; channel<8; channel++){
+		i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
+		i8080_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
+			//mode 0: Pulse/Dir counter mode
+				//     1: Up/Down counter mode
+				//     2: frequency mode
+				//     3: Up counter mode
+
+		i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
+		i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
+	}
+	//Clear all count at beginning.
+	for (channel=0; channel<8; channel++) i8080_ClrCnt(ECSLOT,channel); // the last one
+	return 0;
 }
 int readEncoder(int channel,long *data){
     int Overflow;
-    i8080_ReadCntUpDown(ECSLOT,channel,data,&Overflow);
-    inwPrint("[%i]=%04x\r\n",channel,data);
+	long count;
+    i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
+	*data = (long)Overflow * 0x80000000 + count;
     return 0;
 }
+int Encoder(int piston,unsigned long *data){
+	long value;
+	readEncoder(0+piston,&value);
+	gRegisters[0x29+2*piston] = gRegisters[0x28+2*piston]; // save old position;
+	gRegisters[0x28+2*piston] = value; // current position;
+	gRegisters[0x23+piston] += value;
+	*data = gRegisters[0x23+piston];
+	//if ((long)gRegisters[0x23+piston]<0) return ERROR_ENCODER_UBNORMAL;
+	return 0;
+}
+int Encoder2(int piston,unsigned long *data){
+	long up,down;
+	readEncoder(0+piston*2,&up);
+	readEncoder(1+piston*2,&down);
+	if(up<0){
+		long t;
+		t = down;
+		down = -up;
+		up = t;
+	}
+	else if(down<0){
+		long t;
+		t = up;
+		up = -down;
+		down = t;
+	}
+	gRegisters[0x29+4*piston] = gRegisters[0x28+4*piston]; // save old position;
+	gRegisters[0x28+4*piston] = (dword)down; // current position;
+	gRegisters[0x2b+4*piston] = gRegisters[0x2a+4*piston]; // save old position;
+	gRegisters[0x2a+4*piston] = (dword)up; // current position;
+	gRegisters[0x23+piston] += (gRegisters[0x28+4*piston] - gRegisters[0x29+4*piston]);
+	gRegisters[0x23+piston] -= (gRegisters[0x2b+4*piston] - gRegisters[0x2a+4*piston]);
+	*data = gRegisters[0x23+piston];
+	//if ((long)gRegisters[0x23+piston]<0) return ERROR_ENCODER_UBNORMAL;
+	return 0;
+}
+
+/******************************************************************************
+ * ComPort section
+ ******************************************************************************/
 int initComPort(){
     InstallCom(COMPORT,115200,8,0,1);
     return 0;
@@ -39,32 +97,8 @@ int closeComPort(){
     RestoreCom(COMPORT);
     return 0;
 }
-/*=====================================================================*/
-/*==== Following functions are used to receive data from COM port.  ===*/
-/*==== You can copy the functions to your own program.              ===*/
-/*=====================================================================*/
-/*
-The following two functions are implemented by [non-block] method.
-
-Non-Block method: After calling the function, if there is no data in the
-			   COM port input buffer, the CPU skip the function and
-			   go to execute next code.
-*/
 int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout){
-	/*
-	 Uses COM port to receive data with a terminative char.
 
-	 COMPORT:    COM port number to receive data.
-			   0:COM0, 1:COM1, 2:COM2  .....
-	 *cInBuf:  Input buffer to receive data.
-	 cTerminator: what is the last byte ?
-	 lTimeout: timeout to receive data. (Unit: ms)
-			   The timeout is measured from last received byte
-			   to the terminator.
-	 return: >0 :length of received data
-			  0 :doen't receive any data
-			 -1 :timeout
-	*/
  	unsigned char cChar;
  	int iIndex=0;
  	unsigned long lStartTime;
@@ -89,25 +123,8 @@ int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout){
  	}
  	else return 0;
 }
-/*
-	//Opens one file by name.
-	config=GetFileInfoByName("config_2.ini");
- */
 int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
-	/*
-	 Uses COM port to receive string (fixed data length).
 
-	 COMPORT:    COM port number to receive data.
-			   0:COM0, 1:COM1, 2:COM2  .....
-	 *cInBuf:  Input buffer to receive data.
-	 iLength:  how many bytes to receive?
-	 lTimeout: timeout to receive data. (Unit: ms)
-			   The timeout is measured from last received byte
-			   to receive whole data.
-	 return: >0 :length of received data
-			  0 :doen't receive any data
-			 -1 :timeout
-	*/
 	unsigned char cChar;
 	int iIndex=0;
  	unsigned long lStartTime;
@@ -128,20 +145,11 @@ int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
  	}
  	else return 0;
 }
+/******************************************************************************
+ * IniFie section
+ ******************************************************************************/
 unsigned long FSeek(FILE_DATA far *file_pointer,char cMark,unsigned long lStart,int iTh){
-    /*
-    Seeks the iTh(th) cMark from the start position
-    to the EOF(end of file).
 
-    cMark: find the position next to the cMark.
-    lStart: the start position to seek the cMark.
-            (0: start position of the file)
-    iTh: seek the iTh(th) cMark.
-
-    Return value:
-        0: can't find the cMark
-       >0: the offset position next to the cMark
-    */
 
     char c;
     unsigned long i;

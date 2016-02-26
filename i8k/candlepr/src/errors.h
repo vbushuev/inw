@@ -5,7 +5,8 @@
 
 #define ERROR_EEPROM_READ -2 //0010
 #define ERROR_EEPROM_WRITE -3 //0011
-#define ERROR_ENCODER_NOTFOUND -9 //1 00001 - inwPrint("Initiate 8080 on slot%d error!\n\r",ECSLOT);
+#define ERROR_ENCODER_NOTFOUND -17 //1 0001 - inwPrint("Initiate 8080 on slot%d error!\n\r",ECSLOT);
+#define ERROR_ENCODER_UBNORMAL -18 //1 0010 - Ubnormal encoder state, need calibration
 
 #define ERROR_DIO_TIMEOUT -33//10 00001
 
