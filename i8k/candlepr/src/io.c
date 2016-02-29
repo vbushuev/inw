@@ -27,26 +27,31 @@ int clearEncoder(int piston){
 }
 int InitEncoder(){
 	int channel;
-	for (channel=0; channel<8; channel++){
+	for (channel=0; channel<4; channel++){
 		i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
-		i8080_SetChannelMode(ECSLOT,channel,1); // Up/Down counter mode
+		i8080_SetChannelMode(ECSLOT,channel,0); // Up/Down counter mode
 			//mode 0: Pulse/Dir counter mode
 				//     1: Up/Down counter mode
 				//     2: frequency mode
 				//     3: Up counter mode
 
 		i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
-		i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
+		i8080_SetLowPassFilter_Us(ECSLOT,channel,64); //Set LPF width= 0.001 ms
 	}
 	//Clear all count at beginning.
-	for (channel=0; channel<8; channel++) i8080_ClrCnt(ECSLOT,channel); // the last one
+	for (channel=0; channel<4; channel++) {
+		int ret =0;
+		ret = i8080_ClrCnt(ECSLOT,channel); // the last one
+		if(ret!=0)exception(-11);
+	}
 	return 0;
 }
 int readEncoder(int channel,long *data){
     int Overflow;
 	long count;
     i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
-	*data = (long)Overflow * 0x80000000 + count;
+	//*data = (long)Overflow * 0x80000000 + count;
+	*data = count;
     return 0;
 }
 int Encoder(int piston,unsigned long *data){

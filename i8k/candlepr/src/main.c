@@ -46,6 +46,7 @@ void main(void){
 		 // Read Encoders
 		 ret = Encoder(0,&enc_data);
 		 if(ret!=0)exception(ret);
+		 ledn(0xe,enc_data);
 		 ret = Encoder(1,&enc_data);
 		 if(ret!=0)exception(ret);
 		 // read Panel
@@ -181,8 +182,8 @@ void main(void){
 			 }break;
 			 case 0x06:{
 				 di_data = gRegisters[0x21];
-				 encLUp = gRegisters[0x23];
-				 encRUp = gRegisters[0x24];
+				 //encLUp = gRegisters[0x23];
+				 //encRUp = gRegisters[0x24];
  				 if(finished==1){
 					 sStep scenarioW[] = {
 	 					{0x00000002,{1,0x00000fa0},0x00000000,0},//00 wait for 4000 seconds
@@ -352,8 +353,8 @@ void main(void){
  		 **************************************************************************/
 		 gRegisters[0x21] = (unsigned int)di_data;
 		 gRegisters[0x22] = (unsigned int)do_data;
-		 gRegisters[0x23] = (unsigned int)encLUp%65536;
-		 gRegisters[0x24] = (unsigned int)encRUp%65536;
+		 gRegisters[0x23] = (unsigned int)encLUp/65536;
+		 gRegisters[0x24] = (unsigned int)encLUp%65536;
 		 // Self analyze
 		 //iTime=TimerReadValue();
 		 // for debug mode only

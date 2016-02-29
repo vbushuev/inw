@@ -36,6 +36,8 @@ int initInw(){
     // Registers from EEPROM
     getRegisters();
     gRegisters[0x21] = 0;
+    gRegisters[0x23] = 0;
+    gRegisters[0x24] = 0;
     gRegisters[0x1f] = 0;
     gRegisters[0x27] = 0;
     gRegisters[0x25] = (gRegisters[0x25]*1000<TOTAL_TIMEOUT)?TOTAL_TIMEOUT:gRegisters[0x25];
