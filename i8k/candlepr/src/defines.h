@@ -37,6 +37,7 @@ typedef unsigned long dword;
 typedef struct {
     byte type;
     unsigned long value;
+    byte need;
 } sWait;
 /* One step of script struct
  * command - initiat command

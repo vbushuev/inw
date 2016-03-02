@@ -3,20 +3,20 @@
 //#include <8084W.h>
 //#include "candle_structs.h"
 #include "funcs.h"
-int gRegisters[128];
+word gRegisters[128];
 
 void (far *Reset_Program)(void)=0xFFFF0000L; //Program start address.
 void main(void){
 	int ret;
 	// Timer value
-	int counter=0,ioLength,io, oldCommand;
+	int counter=0,ioLength,io;
 	//
 	byte oldKey;
 	// scenario control
 	int sstep=0, sstage = 0, todo = 0, finished = 1,bDO = 0, stepsInCirce;
 	// DI_DO modules reading buffer
-	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data;
-	long encLUp,encLDown,encRUp,encRDown,ulto;
+	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data,do_add = 0;
+	long ulto;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
 	// Standart I/O buffer
@@ -50,7 +50,6 @@ void main(void){
 		 ret = Encoder(1,&enc_data);
 		 if(ret!=0)exception(ret);
 		 // read Panel
-		 oldCommand = gRegisters[0x20];
 		 readModbusRTU();
 		 // System keys
 		 if(IsSystemKey()){
@@ -77,6 +76,13 @@ void main(void){
 		 /**************************************************************************
  		 * analyze section
  		 **************************************************************************/
+		 // Hydro sensor
+		 gRegisters[0x2d] = ((di_data&0x8000)==0x8000)?1:0;
+		 if(((gRegisters[0x2c])<<20)!=do_add){
+			 do_add=gRegisters[0x2c];
+			 do_add<<=20;
+			 bDO=1;
+		 }
 		 switch (gRegisters[0x20]){
 			 case 0x1: {// Init scenario{}
 			 	sStep scenarioW[]={
@@ -215,8 +221,6 @@ void main(void){
 			 case 0x7f: {// manual mode
 				 di_data = gRegisters[0x21];
 				 do_data = gRegisters[0x22];
-				 encLUp = gRegisters[0x23];
-				 encRUp = gRegisters[0x24];
 				 //gRegisters[0x20] = oldCommand;
 				 break;
 			 }
@@ -233,8 +237,6 @@ void main(void){
 			 default:
 			 	di_data = gRegisters[0x21];
 			 	do_data = gRegisters[0x22];bDO = 1;
-			 	encLUp = gRegisters[0x23];
-			 	encRUp = gRegisters[0x24];
 			 break;
 		 }
 		 /**************************************************************************
@@ -293,8 +295,8 @@ void main(void){
 					 switch(currentScenario[sstep].wait.type){
 						 case 0: // wait for special DI signals
  							flag = (di_data == currentScenario[sstep].wait.value)?1:0;
-							if(di_data&0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-							if(di_data&0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+							if((di_data&0x00000020)==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+							if((di_data&0x00000800)==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
  							break;
 						 case 1: // Timeout wait
 							flag = ( (TimerReadValue()-iTimeout)>= currentScenario[sstep].wait.value) ? 1 : 0;
@@ -346,6 +348,7 @@ void main(void){
  		 * command section
  		 **************************************************************************/
 		 if(bDO){
+			 do_data+=do_add;
 			 ret = sendCommand(do_data);
 			 if(ret)exception(ret);
 			 bDO = 0;

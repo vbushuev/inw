@@ -1,5 +1,5 @@
 #include "funcs.h"
-extern int gRegisters[128];
+extern word gRegisters[128];
 /******************************************************************************
  * DI/DO
  ******************************************************************************/
@@ -11,7 +11,7 @@ int sendCommand(unsigned long command){
 int readSignals(unsigned long *data){
 	unsigned long di;
 	di = DI_32(DISLOT);
-	di = ~di;
+	//di = ~di;
 	gRegisters[0x21] = di;
 	memcpy(data,&di,4);
 	return 0;
