@@ -46,7 +46,7 @@ void main(void){
 		 // Read Encoders
 		 ret = Encoder(0,&enc_data);
 		 if(ret!=0)exception(ret);
-		 ledn(0xe,enc_data);
+		 //ledn(0xe,enc_data);
 		 ret = Encoder(1,&enc_data);
 		 if(ret!=0)exception(ret);
 		 // read Panel
@@ -58,6 +58,8 @@ void main(void){
 			 ledn(17,sKey);
 			 switch(sKey){
 				 case SKEY_UP:
+				 	clearEncoder(0);
+				 	clearEncoder(1);
 				 	break;
 				 case SKEY_DOWN:
 					break;
@@ -351,10 +353,7 @@ void main(void){
 		 /**************************************************************************
  		 * external control section
  		 **************************************************************************/
-		 gRegisters[0x21] = (unsigned int)di_data;
-		 gRegisters[0x22] = (unsigned int)do_data;
-		 gRegisters[0x23] = (unsigned int)encLUp/65536;
-		 gRegisters[0x24] = (unsigned int)encLUp%65536;
+
 		 // Self analyze
 		 //iTime=TimerReadValue();
 		 // for debug mode only

@@ -127,6 +127,7 @@ void ledstr(char *str,int len){
 
 void ledn(int n,unsigned int s){
 	int p1,p2,p3,p4;
+	if(gRegisters[0x1f]!=0) return;
 	Show5DigitLedWithDot(1,n);
 	p1 = s/4096;
 	p2 = (s-4096*p1)/256;

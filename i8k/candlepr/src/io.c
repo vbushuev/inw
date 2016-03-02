@@ -5,21 +5,22 @@ extern int gRegisters[128];
  ******************************************************************************/
 int sendCommand(unsigned long command){
 	DO_32(DOSLOT,command);
-	inwPrint("DO data = %-08lX\n\r",command);
+	gRegisters[0x22] = (unsigned int)command;
 	return 0;
 }
 int readSignals(unsigned long *data){
 	unsigned long di;
 	di = DI_32(DISLOT);
+	di = ~di;
+	gRegisters[0x21] = di;
 	memcpy(data,&di,4);
-	inwPrint("DI data = %08X\n\r",data);
 	return 0;
 }
 /******************************************************************************
  * Encoder section
  ******************************************************************************/
 int clearEncoder(int piston){
-	i8080_ClrCnt(ECSLOT,piston);
+	i8080_ClrCnt(ECSLOT,2*piston);
 	gRegisters[0x23+piston] = 0;
 	gRegisters[0x29+2*piston] = 0; // save old position;
 	gRegisters[0x28+2*piston] = 0; // current position;
@@ -27,7 +28,7 @@ int clearEncoder(int piston){
 }
 int InitEncoder(){
 	int channel;
-	for (channel=0; channel<4; channel++){
+	for (channel=0; channel<8; channel++){
 		i8080_SetXorRegister(ECSLOT,channel,0); // XOR=0 (Low Actived)
 		i8080_SetChannelMode(ECSLOT,channel,0); // Up/Down counter mode
 			//mode 0: Pulse/Dir counter mode
@@ -36,10 +37,10 @@ int InitEncoder(){
 				//     3: Up counter mode
 
 		i8080_SetLowPassFilter_Status(ECSLOT,channel,0); //Disable LPF
-		i8080_SetLowPassFilter_Us(ECSLOT,channel,64); //Set LPF width= 0.001 ms
+		i8080_SetLowPassFilter_Us(ECSLOT,channel,1); //Set LPF width= 0.001 ms
 	}
 	//Clear all count at beginning.
-	for (channel=0; channel<4; channel++) {
+	for (channel=0; channel<8; channel++) {
 		int ret =0;
 		ret = i8080_ClrCnt(ECSLOT,channel); // the last one
 		if(ret!=0)exception(-11);
@@ -49,17 +50,22 @@ int InitEncoder(){
 int readEncoder(int channel,long *data){
     int Overflow;
 	long count;
-    i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
+	i8080_AutoScan();
+    //i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
+	i8080_ReadCntPulseDir(ECSLOT,channel,&count,&Overflow);
 	//*data = (long)Overflow * 0x80000000 + count;
 	*data = count;
     return 0;
 }
+int encoder2mm(dword val){
+	dword r=0;
+	r = val*6/100;
+	return (int)r;
+}
 int Encoder(int piston,unsigned long *data){
 	long value;
-	readEncoder(0+piston,&value);
-	gRegisters[0x29+2*piston] = gRegisters[0x28+2*piston]; // save old position;
-	gRegisters[0x28+2*piston] = value; // current position;
-	gRegisters[0x23+piston] += value;
+	readEncoder(0+2*piston,&value);
+	gRegisters[0x23+piston] = encoder2mm(value);
 	*data = gRegisters[0x23+piston];
 	//if ((long)gRegisters[0x23+piston]<0) return ERROR_ENCODER_UBNORMAL;
 	return 0;
