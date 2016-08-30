@@ -18,7 +18,7 @@ LIBOBJ = $(TCROOT)\LIB\c0l.obj
 OBJ = obj\common.obj obj\io.obj obj\modbus.obj obj\main.obj obj\funcs.obj
 
 all: project
-	echo $(NAME).exe >> dist\autoexec.bat
+	#echo $(NAME).exe >> dist\autoexec.bat
 
 obj\common.obj: $(DIR)\common.c
 		$(CC) $(CCFLAGS) -c -o$@ $?

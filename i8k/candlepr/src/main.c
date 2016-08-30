@@ -15,7 +15,7 @@ void main(void){
 	// scenario control
 	int sstep=0, sstage = 0, todo = 0, finished = 1,bDO = 0, stepsInCirce;
 	// DI_DO modules reading buffer
-	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data,do_add = 0;
+	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data,do_add = 0,diff=0;
 	long ulto;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
@@ -77,7 +77,8 @@ void main(void){
  		 * analyze section
  		 **************************************************************************/
 		 // Hydro sensor
-		 gRegisters[0x2d] = ((di_data&0x8000)==0x8000)?1:0;
+		 gRegisters[0x2d] = ((di_data&0x8000)==0x8000)?0:1;
+
 		 if(((gRegisters[0x2c])<<20)!=do_add){
 			 do_add=gRegisters[0x2c];
 			 do_add<<=20;
@@ -194,16 +195,45 @@ void main(void){
 				 //encRUp = gRegisters[0x24];
  				 if(finished==1){
 					 sStep scenarioW[] = {
-	 					{0x00000002,{1,0x00000fa0},0x00000000,0},//00 wait for 4000 seconds
-	 					{0x00000003,{0,0x00000003},0x00000000,0},//01 wait for DI = 0x0003
-	 					{0x00000004,{0,0x00000004},0x00000000,0},//02 wait for DI = 0x0004
-	 					{0x00000005,{2,0x00000100},0x00000000,0},//03 wait for Encoder L = 0x100
-						{0x00000000,{3,0x00000000},0x00000000,0},//04 finish
-						{0x00000006,{2,0x00000200},0x00000000,0},//05 wait for Encoder R = 0x200
-	 				  	{0x00000000,{4,0x00000000},0x00000000,0},//06 finish
-	 				  	{0x00000000,{5,0x00000000},0x00000000,0} //07 finish
+	 					{0x00000001,{0,0x00000001},0x00000000,0},//00 left hobot
+						{0x00000002,{0,0x00000002},0x00000000,0},
+	 					{0x00000001,{0,0x00004000},0x00000000,0},//01 right hobot
+
+						// move out takers
+						{0x00000040,{0,0x00004040},0x00000000,0},//06 V7 -> A7
+						{0x00010000,{0,0x00002000},0x00000000,0},//00
+
+	 					{0x00000004,{0,0x00004004},0x00000000,0},//02 leftup press up V3->A3
+	 					{0x00000008,{0,0x00004008},0x00000000,0},//03 leftup press down V4->A4
+						{0x00000008,{0,0x00004010},0x00000000,0},//04 leftup press press V4 - A5
+						{0x00000004,{0,0x00004004},0x00000000,0},//05 v3 -> A3
+
+						{0x00000010,{0,0x00000020},0x00000000,0},//00
+						{0x00000020,{2,0x00000000/*rtv.LC*/},0x00000000,0},//01
+						{0x00000020,{2,0x00000000/*rtv.Lh*/},0x00000000,0},//02
+
+	 				  	{0x00000080,{0,0x00004080},0x00000000,0}, //07 V8 -> A8
+	 				  	{0x00000100,{1,0x00004080},0x00000100,0}, //08 V9
+	 				  	{0x00000140,{1,0x00004040},0x00000000,0}, //08 V7 V9 ->A7
+
+						{0x00000800,{0,0x00000100},0x00000000,0},//00
+						{0x00001000,{0,0x00000200},0x00000000,0},//01
+						{0x00001000,{0,0x00000400},0x00000000,0},//02
+						{0x00000800,{0,0x00000100},0x00000000,0},//03
+						{0x00004000,{2,0x00000000/*rtv.Rh*/},0x00000000,0},//04
+						{0x00002000,{0,0x00000800},0x00000000,0},//05
+						{0x00004000,{2,0x00000000/*rtv.Rr*/},0x00000000,0},//06
+
+						{0x00008000,{0,0x00001000},0x00000000,0},//00
+						{0x00020000,{1,0x00001000/*rtv.ttaker*/},0x00020000,0},//01
+						{0x00030000,{0,0x00002000},0x00000000,0},//02
+
+						{0x00000200,{1,0x00000000/*rtv.tV10*/},0x00000000,0},//00
+						{0x00040000,{1,0x00000000/*rtv.tV19*/},0x00000000,0}//01
+
+
 	 			  	 };
-					 stepsInCirce = 8;
+					 stepsInCirce = 27;
 					 finished = 0;
 					 currentScenario = scenarioW;
 					 sstep = 0;
@@ -294,7 +324,9 @@ void main(void){
 					 byte flag = 0;
 					 switch(currentScenario[sstep].wait.type){
 						 case 0: // wait for special DI signals
- 							flag = (di_data == currentScenario[sstep].wait.value)?1:0;
+ 							//flag = (di_data == currentScenario[sstep].wait.value)?1:0;
+							diff = di_data&currentScenario[sstep].wait.value;
+ 							flag = (diff == currentScenario[sstep].wait.value)?1:0;
 							if((di_data&0x00000020)==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
 							if((di_data&0x00000800)==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
  							break;
@@ -368,6 +400,6 @@ void main(void){
 	}
 	Return:
 		deinitInw();
+        return;
 	DelayMs(1000);
-	return;
 }
