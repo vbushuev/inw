@@ -59,10 +59,17 @@ int readEncoder(int channel,long *data){
 }
 int encoder2mm(dword val){
 	dword r=0;
-	r = val*6/100;
+	r = val;
+	//r = val*6/100;
 	return (int)r;
 }
-int Encoder(int piston,unsigned long *data){
+int Encoder(int piston){
+	long value;
+	readEncoder(0+2*piston,&value);
+	gRegisters[0x23+piston] = encoder2mm(value);
+	return 0;
+}
+int Encode2(int piston,unsigned long *data){
 	long value;
 	readEncoder(0+2*piston,&value);
 	gRegisters[0x23+piston] = encoder2mm(value);
@@ -70,7 +77,7 @@ int Encoder(int piston,unsigned long *data){
 	//if ((long)gRegisters[0x23+piston]<0) return ERROR_ENCODER_UBNORMAL;
 	return 0;
 }
-int Encoder2(int piston,unsigned long *data){
+int Encoder3(int piston,unsigned long *data){
 	long up,down;
 	readEncoder(0+piston*2,&up);
 	readEncoder(1+piston*2,&down);

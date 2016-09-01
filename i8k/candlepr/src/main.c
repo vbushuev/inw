@@ -17,6 +17,7 @@ void main(void){
 	// DI_DO modules reading buffer
 	dword di_data=0,do_data=0,iTimeout=0,iCircleTime = 0,enc_data,do_add = 0,diff=0;
 	long ulto;
+	unsigned long lenc,renc;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
 	// Standart I/O buffer
@@ -35,22 +36,31 @@ void main(void){
 	//test_check();
 	// endless circle for main thread
 	gRegisters[0x20]=0x0;
+	// encoder delta
+	gRegisters[0x31]=0x32;
 	for(;;){
 	//while(counter<10){
 		/**************************************************************************
 		 * reading section
 		 **************************************************************************/
 		 // DI module reading
+		 di_data = 0;
 		 ret = readSignals(&di_data);
 		 if(ret)exception(ret);
+		 diff = 0;
+		 diff = di_data&0x00000020;
+		 if(diff==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+		 diff = di_data&0x00000800;
+		 if(diff==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+		 diff = 0;
 		 // Read Encoders
-		 ret = Encoder(0,&enc_data);
+		 ret = Encoder(0);
 		 if(ret!=0)exception(ret);
 		 //ledn(0xe,enc_data);
-		 ret = Encoder(1,&enc_data);
+		 ret = Encoder(1);
 		 if(ret!=0)exception(ret);
 		 // read Panel
-		 readModbusRTU();
+		 //!!!!!   readModbusRTU();
 		 // System keys
 		 if(IsSystemKey()){
 			 byte sKey = GetSystemKey();
@@ -87,16 +97,19 @@ void main(void){
 		 switch (gRegisters[0x20]){
 			 case 0x1: {// Init scenario{}
 			 	sStep scenarioW[]={
-		 			{0x00000020,{2,0/*rtv.Lh*/},0x00000000,0},//00
-		 			{0x00000001,{0,0x00002945},0x00000000,0},//01
-		 			{0x00002000,{2,0x00002145/*rtv.Rh*/},0x00000000,0},//02
-		 			{0x00000000,{1,0x00002145/*rtv.tstart*/},0x00000000,0},//03
-					{0x00000000,{5,0x00000000},0x00000000,0} //04 finish
+					{0x00000004,{0,0x00000004},0x00000000,0},//00
+					{0x00000800,{0,0x00000100},0x00000000,0},//01
+					{0x00000020,{2,0x00000000/*rtv.Lh*/},0x00000000,0},//02
+					{0x00004000,{2,0x00000000/*rtv.Rh*/},0x00000000,0},//03
+					{0x00000001,{0,0x00000001},0x00000000,0},//04
+					{0x00000002,{0,0x00004000},0x00000000,0},//05
+					{0x00000010,{0,0x00000010},0x00000000,0},//06
+					{0x00002000,{0,0x00000800},0x00000000,0},//07
+					{0x00000000,{5,0x00000000},0x00000000,0},//08
 		 	 	};
-		 	 	scenarioW[0].wait.value = gRegisters[0x03];
-		      	scenarioW[2].wait.value = gRegisters[0x05];
-		      	scenarioW[3].wait.value = gRegisters[0x0a]*1000;
-				stepsInCirce = 5;
+		      	scenarioW[2].wait.value =500;
+		      	scenarioW[3].wait.value = 500;
+				stepsInCirce = 9;
 				if(!finished)break;
 				currentScenario = scenarioW;
 				sstep = 0;
@@ -111,19 +124,13 @@ void main(void){
 			 }break;
 			 case 0x3: {// Start scenario{}
 			 	sStep scenarioW[]={
-					{0x00000001,{0,0x00000001},0x00000000,0},//00
-					{0x00000002,{0,0x00004000},0x00000000,0},//01
-					{0x00000044,{0,0x00004044},0x00000000,0},//02
-					{0x00000410,{0,0x00004064},0x00000000,0},//03
-					{0x00000020,{2,0/*rtv.Lh*/},0x00000000,0},//04
-					{0x00000800,{0,0x00004144},0x00000000,0},//05
-					{0x00012000,{0,0x00006944},0x00000000,0},//06
-					{0x00014000,{2,0/*rtv.Rh*/},0x00000000,0},//07
-					{0x00000000,{5,0x00000000},0x00000000,0} //08 finish
+					{0x00000020,{2,0x00000000/*rtv.Lh*/},0x00000000,0},//00
+					{0x00000001,{0,0x00000001},0x00000000,0},//01
+					{0x00000000,{5,0x00000000},0x00000000,0} //02 finish
 				};
-				scenarioW[4].wait.value = gRegisters[0x03];
-		        scenarioW[7].wait.value = gRegisters[0x05];
-				stepsInCirce = 9;
+				scenarioW[0].wait.value = gRegisters[0x03];
+		        //scenarioW[7].wait.value = gRegisters[0x05];
+				stepsInCirce = 3;
 			 	if(!finished)break;
 				finished = 0;
 				currentScenario = scenarioW;
@@ -139,43 +146,45 @@ void main(void){
 			 }break;
 			 case 0x5: {// Main scenario{}
 			 	sStep scenarioW[] = {
-					{0x00000002,{0,0x00002146},0x00000000,0},//00
-				  	{0x00000008,{0,0x0000214a},0x00000000,0},//01
-				  	{0x00000410,{2,0x0000214a/*rtv.LC*/},0x00000000,0},//02
-					{0x00000008,{0,0x00002152},0x00000000,0},//03
-					{0x00000004,{0,0x00002146},0x00000000,0},//04
-					{0x00000080,{0,0x00002186},0x00000000,0},//05
-				  	{0x00000410,{0,0x000021a6},0x00000000,0},//06
-				  	{0x00000100,{1,0x000021a6/*rtv.ttaker*/},0x00000100,0},//07
-				  	{0x00000120,{2,0x00002186/*rtv.Lh*/},0x00000100,0},//08
-				  	{0x00000300,{1,0x00002186/*rtv.tV10*/},0x00000100,0},//09
-				  	{0x00000140,{0,0x00002146},0x00000000,0},//10
-				  	{0x00000001,{0,0x00002145},0x00000000,0},//11
+					{0x00024000,{2,0x00001145/*rtv.Rh*/},0x00020000,0},//00
+					{0x00000002,{0,0x00000002},0x00000000,0},//01
+				  	{0x00000008,{0,0x00000008},0x00000000,0},//02
+				  	{0x00000410,{2,0x0000214a/*rtv.LC*/},0x00000000,0},//03
+					{0x00000008,{0,0x00000010},0x00000000,0},//04
+					{0x00000004,{0,0x00000004},0x00000000,0},//05
+					{0x00000080,{0,0x00000008},0x00000000,0},//06
+				  	{0x00000410,{0,0x00000020},0x00000000,0},//07
+				  	{0x00000100,{1,0x000021a6/*rtv.ttaker*/},0x00000100,0},//08
+				  	{0x00000120,{2,0x00002186/*rtv.Lh*/},0x00000100,0},//09
+				  	{0x00000300,{1,0x00002186/*rtv.tV10*/},0x00000100,0},//10
+				  	{0x00000140,{0,0x00000040},0x00000000,0},//11
+				  	{0x00000001,{0,0x00000001},0x00000000,0},//12
 
-				  	{0x00000000,{3,0x00002145},0x00000000,0},  //12    Произвести фиксацию замеров для левого
+				  	{0x00000000,{3,0x00002145},0x00000000,0},  //13    Произвести фиксацию замеров для левого
 
-				  	{0x00001000,{0,0x00002245},0x00000000,0},//13
-				  	{0x00082000,{2,0x00002245/*rtv.RC*/},0x00000000,0},//14
-				  	{0x00001000,{0,0x00002445},0x00000000,0},//15
-				  	{0x00000800,{0,0x00002145},0x00000000,0},//16
-				  	{0x00008000,{0,0x00001145},0x00000000,0},//17
-				  	{0x00082000,{0,0x00001945},0x00000000,0},//18
-				  	{0x00020000,{1,0x00001945/*rtv.ttaker*/},0x00020000,0},//19
-				  	{0x00024000,{2,0x00001145/*rtv.Rh*/},0x00020000,0},//20
-				  	{0x00060000,{1,0x00001145/*rtv.tV19*/},0x00020000,0},//21
-				  	{0x00030000,{0,0x00002145},0x00000000,0},//22
+				  	{0x00001000,{0,0x00000200},0x00000000,0},//14
+				  	{0x00082000,{2,0x00002245/*rtv.RC*/},0x00000000,0},//15
+				  	{0x00001000,{0,0x00000400},0x00000000,0},//16
+				  	{0x00000800,{0,0x00000100},0x00000000,0},//17
+				  	{0x00008000,{0,0x00001000},0x00000000,0},//18
+				  	{0x00082000,{0,0x00000800},0x00000000,0},//19
+				  	{0x00020000,{1,0x00001945/*rtv.ttaker*/},0x00020000,0},//20
+				  	{0x00024000,{2,0x00001145/*rtv.Rh*/},0x00020000,0},//21
+				  	{0x00060000,{1,0x00001145/*rtv.tV19*/},0x00020000,0},//22
+				  	{0x00030000,{0,0x00002000},0x00000000,0},//23
 
-				  	{0x00000000,{4,0x00002145},0x00000000,0},  //23    Произвести фиксацию замеров для левого
+				  	{0x00000000,{4,0x00002145},0x00000000,0},  //24    Произвести фиксацию замеров для левого
 			  	};
-				scenarioW[2].wait.value = gRegisters[0x02];
-				scenarioW[7].wait.value = gRegisters[0x0b]*1000; // ttaker
-				scenarioW[8].wait.value = gRegisters[0x03];
-				scenarioW[9].wait.value = gRegisters[0x00]*1000;// v10
-				scenarioW[14].wait.value = gRegisters[0x04];
-				scenarioW[19].wait.value = gRegisters[0x0b]*1000; // ttaker
-				scenarioW[20].wait.value = gRegisters[0x05];
-				scenarioW[21].wait.value = gRegisters[0x01]*1000; //V19
-				stepsInCirce = 24;
+				scenarioW[0].wait.value = gRegisters[0x05];
+				scenarioW[3].wait.value = gRegisters[0x02];
+				scenarioW[8].wait.value = gRegisters[0x0b]*1000; // ttaker
+				scenarioW[9].wait.value = gRegisters[0x03];
+				scenarioW[10].wait.value = gRegisters[0x00]*1000;// v10
+				scenarioW[15].wait.value = gRegisters[0x04];
+				scenarioW[20].wait.value = gRegisters[0x0b]*1000; // ttaker
+				scenarioW[21].wait.value = gRegisters[0x05];
+				scenarioW[22].wait.value = gRegisters[0x01]*1000; //V19
+				stepsInCirce = 25;
 				if(!finished)break;
 				finished = 0;
 				currentScenario = scenarioW;
@@ -245,6 +254,88 @@ void main(void){
 	 				 gRegisters[0x0e] = 0;
 	 				 gRegisters[0x0f] = 0;
 	 				 iCircleTime = 0;
+				 }
+				 break;
+			 }
+			 case 0x07: // V1 -> A1
+			 case 0x08: //V1 -> A15
+		     case 0x09: //V2  -> A2
+		     case 0x0a: // V2 ->A15
+		     case 0x0b: // V5 ->A5
+		     case 0x0c: // V6 ->LC
+		     case 0x0d: // V6 ->LH
+		     case 0x0e: // V12 ->A9
+		     case 0x0f: // V13 ->A10
+		     case 0x10: // V13 ->A11
+		     case 0x11: // V14 ->A12
+		     case 0x12: // V15 ->RC
+		     case 0x13: // V15 ->RH
+
+			 case 0x14: // V7 ->A7
+			 case 0x15: // V8 -> A8
+			 case 0x16: // V17 ->A14
+			 case 0x17: // V16 ->A13
+
+			 case 0x18: // V3 -> A3
+			 case 0x19: // V4 ->A4
+			 case 0x1a: // V4 ->A5
+
+			 case 0x20: // V9
+			 case 0x21: // V18
+			 case 0x22: // V10
+			 case 0x23: // V19
+			 {
+				 if(finished==1){
+					 sStep scenarioW[] = {
+						 {0x00000001,{0,0x00000001},0x00000000,0},
+				 		 {0x00000000,{5,0x00000000},0x00000000,0},  //23    Произвести фиксацию замеров для левого
+					 };
+					 gRegisters[0x30] = 0;
+					 gRegisters[0x08] = 1;
+
+					 gRegisters[0x0c] = 0;
+					 gRegisters[0x0d] = 1;
+					 gRegisters[0x0e] = 0;
+					 gRegisters[0x0f] = 0;
+					 switch (gRegisters[0x20]){
+					 	case 0x07: {sStep sCommandStep = {0x00000001,{0,0x00000001},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x08: {sStep sCommandStep = {0x00000001,{0,0x00004000},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x09: {sStep sCommandStep = {0x00000002,{0,0x00000002},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x0a: {sStep sCommandStep = {0x00000002,{0,0x00004000},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x0b: {sStep sCommandStep = {0x00000010,{0,0x00000020},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x0c: {sStep sCommandStep = {0x00000010,{2,0x00000010/*rtv.LC*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x02];break;}
+						case 0x0d: {sStep sCommandStep = {0x00000020,{2,0x00000010/*rtv.LC*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x03];break;}
+
+						case 0x0e: {sStep sCommandStep = {0x00000800,{0,0x00000100},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;break;}
+						case 0x0f: {sStep sCommandStep = {0x00001000,{0,0x00000200},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;break;}
+						case 0x10: {sStep sCommandStep = {0x00001000,{0,0x00000400},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;break;}
+						case 0x11: {sStep sCommandStep = {0x00002000,{0,0x00000800},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;break;}
+						case 0x12: {sStep sCommandStep = {0x00002000,{2,0x00000000/*rtv.RC*/},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;scenarioW[0].wait.value = gRegisters[0x04];break;}
+						case 0x13: {sStep sCommandStep = {0x00004000,{2,0x00000000/*rtv.Rh*/},0x00000000,0};scenarioW[0]=sCommandStep;gRegisters[0x30]=1;scenarioW[0].wait.value = gRegisters[0x05];break;}
+
+						case 0x14: {sStep sCommandStep = {0x00000040,{0,0x00000040},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x15: {sStep sCommandStep = {0x00000080,{0,0x00000080},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x16: {sStep sCommandStep = {0x00010000,{0,0x00002000},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x17: {sStep sCommandStep = {0x00008000,{0,0x00001000},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+
+						case 0x18: {sStep sCommandStep = {0x00000004,{0,0x00000004},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x19: {sStep sCommandStep = {0x00000008,{0,0x00000008},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+						case 0x1a: {sStep sCommandStep = {0x00000008,{0,0x00000010},0x00000000,0};scenarioW[0]=sCommandStep;break;}
+
+						case 0x20: {sStep sCommandStep = {0x00000100,{1,0x00000000/*rtv.ttaker*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x0b]*1000;break;}
+						case 0x21: {sStep sCommandStep = {0x00020000,{1,0x00000000/*rtv.ttaker*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x0b]*1000;break;}
+						case 0x22: {sStep sCommandStep = {0x00000200,{1,0x00000000/*rtv.tV10*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x00]*1000;break;}
+						case 0x23: {sStep sCommandStep = {0x00040000,{1,0x00000000/*rtv.tV19*/},0x00000000,0};scenarioW[0]=sCommandStep;scenarioW[0].wait.value = gRegisters[0x01]*1000;break;}
+
+				 	}
+					 stepsInCirce = 2;
+					 finished = 0;
+					 currentScenario = scenarioW;
+					 sstep = 0;
+					 sstage = 0;
+					 todo = 1;
+
+					 iCircleTime = 0;
 				 }
 				 break;
 			 }
@@ -322,28 +413,35 @@ void main(void){
 				 }
 				 case 1:{
 					 byte flag = 0;
+					 gRegisters[0x32]=currentScenario[sstep].wait.value;
+					 gRegisters[0x33]=currentScenario[sstep].wait.type;
 					 switch(currentScenario[sstep].wait.type){
 						 case 0: // wait for special DI signals
  							//flag = (di_data == currentScenario[sstep].wait.value)?1:0;
 							diff = di_data&currentScenario[sstep].wait.value;
  							flag = (diff == currentScenario[sstep].wait.value)?1:0;
-							if((di_data&0x00000020)==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-							if((di_data&0x00000800)==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+							diff = di_data&0x00000020;
+							if(diff==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+							diff = di_data&0x00000800;
+							if(diff==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
  							break;
 						 case 1: // Timeout wait
 							flag = ( (TimerReadValue()-iTimeout)>= currentScenario[sstep].wait.value) ? 1 : 0;
 							break;
-						 case 2: // Encoder wait
-							flag = (
-								(
-									(gRegisters[0x30]==0)&&(gRegisters[0x23] >= currentScenario[sstep].wait.value)
-								)
-								||
-								(
-									(gRegisters[0x30]==1)&&(gRegisters[0x24] >= currentScenario[sstep].wait.value)
-								)
-							)?1:0;
+						 case 2: {// Encoder wait
+							 if(gRegisters[0x30]==0){ //left
+								 diff = do_data&0x00000010;
+								 if(diff == 0x00000010) flag = (currentScenario[sstep].wait.value >= gRegisters[0x23])?1:0;
+								 else flag = (currentScenario[sstep].wait.value <= gRegisters[0x23])?1:0;
+							 }
+							 else { //right
+								 diff = do_data&0x00002000;
+								 if(diff == 0x00002000) flag = (currentScenario[sstep].wait.value >= gRegisters[0x24])?1:0;
+								 else flag = (currentScenario[sstep].wait.value <= gRegisters[0x24])?1:0;
+							 }
+
 							break;
+						}
 					 }
 					 if(flag==1){
 						sstage=2;
@@ -362,6 +460,7 @@ void main(void){
 				 }
 				 case 2:{
 					 //RefreshWDT();
+
 					 sstage = 3;
 				 }
 			 }
@@ -388,7 +487,10 @@ void main(void){
 		 /**************************************************************************
  		 * external control section
  		 **************************************************************************/
-
+		 // read Panel
+		 if(sstage!=1){
+			 readModbusRTU();
+		 }
 		 // Self analyze
 		 //iTime=TimerReadValue();
 		 // for debug mode only
@@ -401,5 +503,5 @@ void main(void){
 	Return:
 		deinitInw();
         return;
-	DelayMs(1000);
+	//DelayMs(1000);
 }

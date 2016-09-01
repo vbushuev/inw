@@ -31,7 +31,8 @@ void ledsOff();
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
 int InitEncoder();
-int Encoder(int piston,unsigned long *data);
+int Encoder(int piston);
+int Encoder2(int piston,unsigned long *data);
 /*
  Uses COM port to receive data with a terminative char.
  COMPORT:    COM port number to receive data.
