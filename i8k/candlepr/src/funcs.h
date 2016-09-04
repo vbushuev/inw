@@ -12,6 +12,7 @@
 void inwPrint(char *s,...);
 int initInw();
 void deinitInw();
+int check(unsigned long di_d, unsigned long do_d, unsigned long do_to);
 /******************************************************************************
  * Common
  ******************************************************************************/
@@ -25,13 +26,14 @@ void ledn(int n,unsigned int s);
 void leds(int s);
 void ledstr(char *str,int len);
 void ledsOff();
+int compare_bit(unsigned long d1,unsigned long d2);
 /******************************************************************************
  * I\O
  ******************************************************************************/
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
 int InitEncoder();
-int Encoder(int piston);
+int Encoder(int piston,long *d);
 int Encoder2(int piston,unsigned long *data);
 /*
  Uses COM port to receive data with a terminative char.

@@ -63,9 +63,10 @@ int encoder2mm(dword val){
 	//r = val*6/100;
 	return (int)r;
 }
-int Encoder(int piston){
+int Encoder(int piston,long *d){
 	long value;
 	readEncoder(0+2*piston,&value);
+	*d = value;
 	gRegisters[0x23+piston] = encoder2mm(value);
 	return 0;
 }

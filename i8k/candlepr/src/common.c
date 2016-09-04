@@ -4,7 +4,7 @@
 extern int gRegisters[128];
 int exception(int e){
 	e = -e;
-	gRegisters[0x1f] = e;
+	if(gRegisters[0x1f] == 0) gRegisters[0x1f] = e;
     ledn(14,e);
 	return 0;
 }
