@@ -17,6 +17,7 @@
 #define EEPROM_TOTAL 1
 #define EEPROM_REGISTERS 2
 
+#define H_00 0x00000000
 #define H_01 0x00000001
 #define H_02 0x00000002
 #define H_03 0x00000004

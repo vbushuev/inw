@@ -111,8 +111,8 @@ void main(void){
 					{0x00000002,{0,0x00004000},0x00000000,0},//07
 					{0x00000000,{5,0x00000000},0x00000000,0},//8
 		 	 	};
-		      	scenarioW[4].wait.value =1800;
-		      	scenarioW[5].wait.value =1800;
+		      	scenarioW[4].wait.value =1000;
+		      	scenarioW[5].wait.value =1000;
 				stepsInCirce = 9;
 				if(!finished)break;
 				currentScenario = scenarioW;
@@ -188,11 +188,6 @@ void main(void){
 				scenarioW[20].wait.value = gRegisters[0x05];
 				scenarioW[21].wait.value = gRegisters[0x01]*1000; //V19
 				stepsInCirce = 24;
-				if(!compare_bit(di_data,H_01|H_03|H_07|H_09|H_14)){
-					exception(6);
-					gRegisters[0x20] = 0x80;
-					break;
-				}
 				if(!finished)break;
 				finished = 0;
 				currentScenario = scenarioW;
@@ -500,8 +495,12 @@ void main(void){
  		 * command section
  		 **************************************************************************/
 		 if(bDO){
-			 //do_data+=do_add;
-			 ret = check (di_data,do_data,currentScenario[sstep].wait.value);
+			 do_data+=do_add;
+			 if( (gRegisters[0x20] == 0x05) && (sstep==0) && (sstage==1) && (!compare_bit(di_data,0x00002145))){
+				 exception(ERROR_NOT_INITIATED);
+				 gRegisters[0x20] = 0x80;
+			 }
+			 ret = check (di_data,do_data,currentScenario[sstep].wait);
 			 if(ret){
 				 exception(ret);
 				 gRegisters[0x20] = 0x80;

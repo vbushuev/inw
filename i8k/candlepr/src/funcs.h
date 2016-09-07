@@ -12,7 +12,7 @@
 void inwPrint(char *s,...);
 int initInw();
 void deinitInw();
-int check(unsigned long di_d, unsigned long do_d, unsigned long do_to);
+int check(unsigned long di_d, unsigned long do_d, sWait do_to);
 /******************************************************************************
  * Common
  ******************************************************************************/
