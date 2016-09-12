@@ -17,27 +17,27 @@
 #define EEPROM_TOTAL 1
 #define EEPROM_REGISTERS 2
 
-#define H_00 0x00000000
-#define H_01 0x00000001
-#define H_02 0x00000002
-#define H_03 0x00000004
-#define H_04 0x00000008
-#define H_05 0x00000010
-#define H_06 0x00000020
-#define H_07 0x00000040
-#define H_08 0x00000080
-#define H_09 0x00000100
-#define H_10 0x00000200
-#define H_11 0x00000400
-#define H_12 0x00000800
-#define H_13 0x00001000
-#define H_14 0x00002000
-#define H_15 0x00004000
-#define H_16 0x00008000
-#define H_17 0x00010000
-#define H_18 0x00020000
-#define H_19 0x00040000
-#define H_20 0x00080000
+#define H_00 0x00000
+#define H_01 0x00001
+#define H_02 0x00002
+#define H_03 0x00004
+#define H_04 0x00008
+#define H_05 0x00010
+#define H_06 0x00020
+#define H_07 0x00040
+#define H_08 0x00080
+#define H_09 0x00100
+#define H_10 0x00200
+#define H_11 0x00400
+#define H_12 0x00800
+#define H_13 0x01000
+#define H_14 0x02000
+#define H_15 0x04000
+#define H_16 0x08000
+#define H_17 0x10000
+#define H_18 0x20000
+#define H_19 0x40000
+#define H_20 0x80000
 
 typedef unsigned char byte;
 typedef unsigned int word;
@@ -53,6 +53,7 @@ typedef unsigned long dword;
  *  2 - encoder
  *  3 - произвести замеры счетчиков и таймеров для левого
  *  4 - произвести замеры счетчиков и таймеров для правого
+ *  5 - завершить
  * value
  */
 typedef struct {

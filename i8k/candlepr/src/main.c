@@ -303,8 +303,8 @@ void main(void){
 				sstage = 0;
 				todo = 1;
 				gRegisters[0x30] = 0;
-				gRegisters[0x08] = 1;
-				gRegisters[0x09] = 1;
+				gRegisters[0x08] = 0;
+				gRegisters[0x09] = 0;
 				gRegisters[0x0c] = 0;
 				gRegisters[0x0d] = 0;
 				 break;
@@ -315,10 +315,11 @@ void main(void){
 					{0x00004000,{2,0x00000000/*rtv.Rh*/},0x00000000,0},//01
 					{0x00000000,{5,0x00000000},0x00000000,0} //02 finish
 				};
-				scenarioW[1].wait.value = gRegisters[0x05];
+
 			    //scenarioW[7].wait.value = gRegisters[0x05];
-				stepsInCirce = 3;
 				if(!finished)break;
+				scenarioW[1].wait.value = gRegisters[0x05];
+				stepsInCirce = 3;
 				finished = 0;
 				currentScenario = scenarioW;
 				//ret = loadStartScenario(currentScenario);if(ret){exception(ret);continue;}
@@ -330,6 +331,71 @@ void main(void){
 				gRegisters[0x09] = 1;
 				gRegisters[0x0c] = 0;
 				gRegisters[0x0d] = 0;
+				break;
+			 }
+ 			 case 0x1d:{ // setup left
+				 sStep scenarioW[] = {
+ 					{H_03,{0,H_03},H_00,0},//00
+ 					{H_05,{0,H_06},H_00,0},//01
+ 					{H_06,{2,H_00},H_00,0},//02 LH
+ 					{H_01,{0,H_01},H_00,0},//03
+ 				  	{H_00,{1,1000},H_00,0},//04 timer
+ 				  	{H_02,{0,H_15},H_00,0},//05
+ 					{H_04,{0,H_04},H_00,0},//06
+ 					{H_05,{2,H_00},H_00,0},//07 LC
+ 					{H_04,{0,H_05},H_00,0},//08
+ 					{H_03,{0,H_03},H_00,0},//09
+					{H_05,{0,H_06},H_00,0},//10
+ 					{H_00,{5,H_00},H_00,0},  //11 Finish
+ 			  	};
+				scenarioW[2].wait.value = gRegisters[0x03];
+				scenarioW[4].wait.value = gRegisters[0x0b]*1000;
+ 				scenarioW[7].wait.value = gRegisters[0x02];
+				stepsInCirce = 12;
+				if(!finished)break;
+				finished = 0;
+ 				currentScenario = scenarioW;
+ 				sstep = 0;
+ 				sstage = 0;
+ 				todo = 1;
+				gRegisters[0x30] = 0;
+				gRegisters[0x08] = 1;
+				gRegisters[0x09] = 1;
+				gRegisters[0x0c] = 0;
+				gRegisters[0x0d] = 0;
+ 				iCircleTime = 0;
+				break;
+			 }
+			 case 0x1e:{ // setup right
+				 sStep scenarioW[] = {
+ 					{H_12,{0,H_09},H_00,0},//00
+ 					{H_14,{0,H_12},H_00,0},//01
+ 					{H_15,{2,H_00},H_00,0},//02 LH
+ 					{H_02,{0,H_02},H_00,0},//03
+ 				  	{H_00,{1,1000},H_00,0},//04 timer
+ 				  	{H_01,{0,H_15},H_00,0},//05
+ 					{H_13,{0,H_10},H_00,0},//06
+ 					{H_14,{2,H_00},H_00,0},//07 LC
+ 					{H_13,{0,H_11},H_00,0},//08
+ 					{H_12,{0,H_09},H_00,0},//09
+					{H_15,{0,H_12},H_00,0},//10
+ 					{H_00,{5,H_00},H_00,0},  //11 Finish
+ 			  	};
+ 				scenarioW[2].wait.value = gRegisters[0x05];
+ 				scenarioW[7].wait.value = gRegisters[0x04];
+ 				stepsInCirce = 12;
+ 				if(!finished)break;
+ 				finished = 0;
+ 				currentScenario = scenarioW;
+ 				sstep = 0;
+ 				sstage = 0;
+ 				todo = 1;
+ 				gRegisters[0x30] = 0;
+ 				gRegisters[0x0c] = 0;
+ 				gRegisters[0x0d] = 0;
+ 				gRegisters[0x0e] = 0;
+ 				gRegisters[0x0f] = 0;
+ 				iCircleTime = 0;
 				break;
 			 }
 			 case 0x7f: {// manual mode
@@ -476,7 +542,7 @@ void main(void){
 				 }
 				 case 2:{
 					 //RefreshWDT();
-					 DelayMs(100);
+					 DelayMs(120);
 					 sstage = 3;
 				 }
 			 }
@@ -495,7 +561,7 @@ void main(void){
  		 * command section
  		 **************************************************************************/
 		 if(bDO){
-			 do_data+=do_add;
+			 //do_data+=do_add;
 			 if( (gRegisters[0x20] == 0x05) && (sstep==0) && (sstage==1) && (!compare_bit(di_data,0x00002145))){
 				 exception(ERROR_NOT_INITIATED);
 				 gRegisters[0x20] = 0x80;
