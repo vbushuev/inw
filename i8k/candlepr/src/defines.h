@@ -43,7 +43,17 @@ typedef unsigned char byte;
 typedef unsigned int word;
 typedef unsigned long dword;
 
+/*
+ * 80х180 - 2200/3100
+ * 80x200 - 2450/3000
 
+
+
+ * 70x100 - 1400/1500
+ * 70x120 - 1620/1900
+ * 70x150 - 1790/2580
+ * 70x170 - 2070/2800
+ */
 #pragma pack(push,1)
 // script struct
 /* wait type

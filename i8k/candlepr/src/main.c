@@ -53,7 +53,7 @@ void main(void){
 		 if(diff==0x00000020)clearEncoder(0); // нижний поршень в верхнем положении левый(0)
 		 diff = di_data&0x00000800;
 		 if(diff==0x00000800)clearEncoder(1); // нижний поршень в верхнем положении правый(1)
-		 diff = 0;
+		 diff = 0;s
 		 */
 		 // Read Encoders
 		 ret = Encoder(0,&lenc);
@@ -107,13 +107,15 @@ void main(void){
 					//{0x00002000,{0,0x00000800},0x00000000,0},//05
 					{0x00000020,{1,0x00000000/*rtv.Lh*/},0x00000000,0},//04
 					{0x00004000,{1,0x00000000/*rtv.Rh*/},0x00000000,0},//05
-					{0x00000001,{0,0x00000001},0x00000000,0},//06
-					{0x00000002,{0,0x00004000},0x00000000,0},//07
-					{0x00000000,{5,0x00000000},0x00000000,0},//8
+					{H_01,{0,H_15},0x00000000,0},//06
+					{0x00000000,{5,0x00000000},0x00000000,0},//07
 		 	 	};
-		      	scenarioW[4].wait.value =1000;
-		      	scenarioW[5].wait.value =1000;
-				stepsInCirce = 9;
+		      	scenarioW[4].wait.value =1500;
+		      	scenarioW[5].wait.value =1500;
+				if(compare_bit(di_data,H_01)==1){
+					scenarioW[6].command = H_02;
+				}
+				stepsInCirce = 8;
 				if(!finished)break;
 				currentScenario = scenarioW;
 				sstep = 0;
@@ -164,20 +166,20 @@ void main(void){
 				  	{0x00000140,{0,0x00000040},0x00000000,0},//10
 				  	{0x00000001,{0,0x00000001},0x00000000,0},//11
 
-				  	{0x00000000,{3,0x00002145},0x00000000,0},  //12    Произвести фиксацию замеров для левого
+				  	{0x00000000,{3,0x00000000},0x00000000,0},  //12    Произвести фиксацию замеров для левого
 
 				  	{0x00001000,{0,0x00000200},0x00000000,0},//13
-				  	{0x00082000,{2,0x00002245/*rtv.RC*/},0x00000000,0},//14
+				  	{0x00082000,{2,0x00000000/*rtv.RC*/},0x00000000,0},//14
 				  	{0x00001000,{0,0x00000400},0x00000000,0},//15
 				  	{0x00000800,{0,0x00000100},0x00000000,0},//16
 				  	{0x00008000,{0,0x00001000},0x00000000,0},//17
 				  	{0x00082000,{0,0x00000800},0x00000000,0},//18
-				  	{0x00020000,{1,0x00001945/*rtv.ttaker*/},0x00020000,0},//19
-				  	{0x00024000,{2,0x00001145/*rtv.Rh*/},0x00020000,0},//20
-				  	{0x00060000,{1,0x00001145/*rtv.tV19*/},0x00020000,0},//21
+				  	{0x00020000,{1,0x00000000/*rtv.ttaker*/},0x00020000,0},//19
+				  	{0x00024000,{2,0x00000000/*rtv.Rh*/},0x00020000,0},//20
+				  	{0x00060000,{1,0x00000000/*rtv.tV19*/},0x00020000,0},//21
 				  	{0x00030000,{0,0x00002000},0x00000000,0},//22
 
-				  	{0x00000000,{4,0x00002145},0x00000000,0},  //23    Произвести фиксацию замеров для левого
+				  	{0x00000000,{4,0x00000000},0x00000000,0},  //23    Произвести фиксацию замеров для левого
 			  	};
 				scenarioW[2].wait.value = gRegisters[0x02];
 				scenarioW[7].wait.value = gRegisters[0x0b]*1000; // ttaker
@@ -315,11 +317,11 @@ void main(void){
 					{0x00004000,{2,0x00000000/*rtv.Rh*/},0x00000000,0},//01
 					{0x00000000,{5,0x00000000},0x00000000,0} //02 finish
 				};
-
-			    //scenarioW[7].wait.value = gRegisters[0x05];
-				if(!finished)break;
 				scenarioW[1].wait.value = gRegisters[0x05];
 				stepsInCirce = 3;
+			    //scenarioW[7].wait.value = gRegisters[0x05];
+				if(!finished)break;
+
 				finished = 0;
 				currentScenario = scenarioW;
 				//ret = loadStartScenario(currentScenario);if(ret){exception(ret);continue;}
@@ -327,8 +329,8 @@ void main(void){
 				sstage = 0;
 				todo = 1;
 				gRegisters[0x30] = 1;
-				gRegisters[0x08] = 1;
-				gRegisters[0x09] = 1;
+				gRegisters[0x08] = 0;
+				gRegisters[0x09] = 0;
 				gRegisters[0x0c] = 0;
 				gRegisters[0x0d] = 0;
 				break;
@@ -378,7 +380,7 @@ void main(void){
  					{H_14,{2,H_00},H_00,0},//07 LC
  					{H_13,{0,H_11},H_00,0},//08
  					{H_12,{0,H_09},H_00,0},//09
-					{H_15,{0,H_12},H_00,0},//10
+					{H_14,{0,H_12},H_00,0},//10
  					{H_00,{5,H_00},H_00,0},  //11 Finish
  			  	};
  				scenarioW[2].wait.value = gRegisters[0x05];
@@ -390,7 +392,7 @@ void main(void){
  				sstep = 0;
  				sstage = 0;
  				todo = 1;
- 				gRegisters[0x30] = 0;
+ 				gRegisters[0x30] = 1;
  				gRegisters[0x0c] = 0;
  				gRegisters[0x0d] = 0;
  				gRegisters[0x0e] = 0;
@@ -423,8 +425,7 @@ void main(void){
  		 * program checks and locks section
  		 **************************************************************************/
 
-		 if(gRegisters[0x30]==0)ledn(0xe,lenc);
-		 else ledn(0xe,renc);
+		 if(gRegisters[0x30]==0)ledn(0xe,lenc); else ledn(0xe,renc);
 		 if(todo&&!bDO){
 			 if(currentScenario==0)continue;
 			 switch(sstage){
@@ -542,7 +543,7 @@ void main(void){
 				 }
 				 case 2:{
 					 //RefreshWDT();
-					 DelayMs(120);
+					 DelayMs(8);
 					 sstage = 3;
 				 }
 			 }
@@ -562,11 +563,11 @@ void main(void){
  		 **************************************************************************/
 		 if(bDO){
 			 //do_data+=do_add;
-			 if( (gRegisters[0x20] == 0x05) && (sstep==0) && (sstage==1) && (!compare_bit(di_data,0x00002145))){
+			 if( (gRegisters[0x20] == 0x05) && (sstep==0) && (sstage==1) && (!compare_bit(di_data,0x00002144))){
 				 exception(ERROR_NOT_INITIATED);
 				 gRegisters[0x20] = 0x80;
 			 }
-			 ret = check (di_data,do_data,currentScenario[sstep].wait);
+			 if(!ret)ret = check (di_data,do_data,currentScenario[sstep].wait);
 			 if(ret){
 				 exception(ret);
 				 gRegisters[0x20] = 0x80;

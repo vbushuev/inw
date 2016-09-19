@@ -61,50 +61,50 @@ int check(unsigned long di_d,unsigned long do_d, sWait do_to){
             || !compare_bit(di_d,H_07)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_02) && compare_bit(do_to.value,H_02) ){// hobot moving right
+    else if( compare_bit(do_d,H_02) && compare_bit(do_to.value,H_02) ){// hobot moving right
         if ( !compare_bit(di_d,H_09)
             || compare_bit(di_d,H_12)
             || !compare_bit(di_d,H_14)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_04) && (compare_bit(do_to.value,H_04)||compare_bit(do_to.value,H_05)) ){// up left press down
+    else if( compare_bit(do_d,H_04) && (compare_bit(do_to.value,H_04)||compare_bit(do_to.value,H_05)) ){// up left press down
         if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_02))
             || compare_bit(di_d,H_06)
             || !compare_bit(di_d,H_07)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_13) && (compare_bit(do_to.value,H_10)||compare_bit(do_to.value,H_11)) ){// up right press down
+    else if( compare_bit(do_d,H_05) && compare_bit(do_to.value,H_06) && (do_to.type!=2)){// left down press - up
+        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
+            || !compare_bit(di_d,H_03)
+        ) return ERROR_WRONG_COMAND;
+    }
+    else if( compare_bit(do_d,H_08)){// уват левый
+        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
+            || !compare_bit(di_d,H_03)
+        ) return ERROR_WRONG_COMAND;
+    }
+    else if( compare_bit(do_d,H_10)){// cutter left
+        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
+            || !compare_bit(di_d,H_03)
+        ) return ERROR_WRONG_COMAND;
+    }
+    else if( compare_bit(do_d,H_13) && (compare_bit(do_to.value,H_10)||compare_bit(do_to.value,H_11)) ){// up right press down
         if ( !(compare_bit(di_d,H_01) || compare_bit(di_d,H_15))
             || compare_bit(di_d,H_12)
             || !compare_bit(di_d,H_14)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_05) && compare_bit(do_to.value,H_06) && (do_to.type!=2)){// left down press - up
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
+    else if( compare_bit(do_d,H_14) && compare_bit(do_to.value,H_12)  && (do_to.type!=2)){// right down press - up
+        if ( !( compare_bit(di_d,H_15)||compare_bit(di_d,H_01) )
+            || !compare_bit(di_d,H_09)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_14) && compare_bit(do_to.value,H_12)  && (do_to.type!=2)){// right down press - up
+    else if( compare_bit(do_d,H_16)){// ухват правый
         if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
             || !compare_bit(di_d,H_09)
         ) return ERROR_WRONG_COMAND;
     }
-    if( compare_bit(do_d,H_08)){// right down press - up
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
-        ) return ERROR_WRONG_COMAND;
-    }
-    if( compare_bit(do_d,H_16)){// right down press - up
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
-            || !compare_bit(di_d,H_09)
-        ) return ERROR_WRONG_COMAND;
-    }
-    if( compare_bit(do_d,H_10)){// right down press - up
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
-        ) return ERROR_WRONG_COMAND;
-    }
-    if( compare_bit(do_d,H_19)){// right down press - up
+    else if( compare_bit(do_d,H_19)){// cutter right
         if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
             || !compare_bit(di_d,H_09)
         ) return ERROR_WRONG_COMAND;
