@@ -5,7 +5,7 @@ extern int gRegisters[128];
 int exception(int e){
 	e = -e;
 	if(gRegisters[0x1f] == 0) gRegisters[0x1f] = e;
-    ledn(14,e);
+    ledn(15,e);
 	return 0;
 }
 int showError(){
