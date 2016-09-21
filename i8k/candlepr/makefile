@@ -15,7 +15,7 @@ LINKFLAGS = $(LINKFLAGS) /L$(TCROOT)\LIB;$(ICPLIB)
 NAME = candlepr
 LIB = mathl.lib emu.lib cl.lib 8000e.lib 8080l.lib
 LIBOBJ = $(TCROOT)\LIB\c0l.obj
-OBJ = obj\common.obj obj\io.obj obj\modbus.obj obj\main.obj obj\funcs.obj
+OBJ = obj\common.obj obj\io.obj obj\modbus.obj obj\main.obj obj\funcs.obj obj\candle.obj 
 
 all: project
 	#echo $(NAME).exe >> dist\autoexec.bat
@@ -33,6 +33,9 @@ obj\modbus.obj: $(DIR)\modbus.c
 	$(CC) $(CCFLAGS) -c -o$@ $?
 
 obj\funcs.obj: $(DIR)\funcs.c
+	$(CC) $(CCFLAGS) -c -o$@ $?
+
+obj\candle.obj: $(DIR)\candle.c
 	$(CC) $(CCFLAGS) -c -o$@ $?
 
 project: $(OBJ)
