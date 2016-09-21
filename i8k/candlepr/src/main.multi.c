@@ -62,7 +62,7 @@ void main(void){
 		 ret = Encoder(1,&renc);
 		 if(ret!=0)exception(ret);
 		 // read Panel
-		 //!!!!!   readModbusRTU();
+		 readModbusRTU();
 		 // System keys
 		 if(IsSystemKey()){
 			 byte sKey = GetSystemKey();
@@ -428,131 +428,8 @@ void main(void){
 		 if(gRegisters[0x30]==0)ledn(0xe,lenc); else ledn(0xe,renc);
 		 if(todo&&!bDO){
 			 if(currentScenario==0)continue;
-			 switch(sstage){
-				 case 0:{
-				 	if(currentScenario[sstep].wait.type==3){
-						int ict = 0;
-						ict = TimerReadValue() - iCircleTime;
-						iCircleTime = TimerReadValue();
-						sstage=3;
-						gRegisters[0x0c]++;
-	   				 	gRegisters[0x0e] = ict;
-						// счетчик пробега
-						gRegisters[0x10]++;
-	   				 	gRegisters[0x12] += ict;
-						gRegisters[0x30] = 1;
-					}
-					else if(currentScenario[sstep].wait.type==4){
-						int ict = 0;
-						ict = TimerReadValue() - iCircleTime;
-						iCircleTime = TimerReadValue();
-						sstage=3;
-						gRegisters[0x0d]++;
-	   				 	gRegisters[0x0f] = ict;
-						if(gRegisters[0x0d]>=gRegisters[0x08]){ // пока делаем одинаковое кол-во циклов для левой и правой
-							finished = 1;
-							todo = 0;
-							gRegisters[0x20]=0;
-						}
-						// счетчик пробега
-						gRegisters[0x11]++;
-	   				 	gRegisters[0x13] += ict;
-						gRegisters[0x30] = 0;
-					}
-					else if(currentScenario[sstep].wait.type==5){
-						finished = 1;
-						todo = 0;
-						gRegisters[0x20]=0;
-					}
-					else{
-						//if(currentScenario[sstep].wait.type==1)iStepTime = TimerReadValue();
-						if(currentScenario[sstep].wait.type==2){
-							diff = currentScenario[sstep].command&H_06;
-							if(diff == H_06){
-								clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-							}
-							else {
-								diff = currentScenario[sstep].command&H_15;
-								if (diff == H_15){
-									clearEncoder(1); // нижний поршень в верхнем положении левый(0)
-								}
-							}
-						}
-					 	do_data = currentScenario[sstep].command;
-						bDO = 1;
-						sstage=1;
-						//TimerResetValue();
-						iTimeout = TimerReadValue();
-					}
-					break;
-				 }
-				 case 1:{
-					 byte flag = 0;
-					 gRegisters[0x32]=currentScenario[sstep].wait.value;
-					 gRegisters[0x33]=currentScenario[sstep].wait.type;
-					 switch(currentScenario[sstep].wait.type){
-						 case 0: // wait for special DI signals
- 							//flag = (di_data == currentScenario[sstep].wait.value)?1:0;
-							diff = di_data&currentScenario[sstep].wait.value;
- 							flag = (diff == currentScenario[sstep].wait.value)?1:0;
-
-							diff = di_data&H_06;
-							if(diff==H_06){
-								clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-								//DelayMs(80);
-							}
-							diff = di_data&H_12;
-							if(diff==H_12){
-								clearEncoder(1); // нижний поршень в верхнем положении правый(1)
-								//DelayMs(80);
-							}
-							break;
-						 case 1: // Timeout wait
-							flag = ( (TimerReadValue()-iTimeout)>= currentScenario[sstep].wait.value) ? 1 : 0;
-							break;
-						 case 2: {// Encoder wait
-							 long lwaitval = currentScenario[sstep].wait.value;
-							 if(gRegisters[0x30]==0){ //left
-								 diff = do_data&H_05;
-								 if(diff == H_05) flag = (lwaitval >= lenc)?1:0;
-								 else flag = (lwaitval <= lenc)?1:0;
-							 }
-							 else { //right
-								 diff = do_data&H_14;
-								 if(diff == H_14) flag = (lwaitval >= renc)?1:0;
-								 else flag = (lwaitval<=renc)?1:0;
-							 }
-
-							break;
-						}
-					 }
-					 if(flag==1){
-						 gRegisters[0x34] = TimerReadValue();
-						sstage=2;
-						do_data = currentScenario[sstep].finish;
-						bDO = 1; // flag to send command
-					 }
-					 else { // check timeout
-						 //if((TimerReadValue()-iTimeout) >= ((currentScenario[sstep].timer>0)?currentScenario[sstep].timer:(gRegisters[0x25]>0?gRegisters[0x25]:TOTAL_TIMEOUT))){
-						 if((TimerReadValue()-iTimeout) >= gRegisters[0x25]*1000){
-							 //alarm
-							 gRegisters[0x20] = 0x80;
-							 exception(ERROR_ALARM_DELAY);
-						 }
-					 }
-					 break;
-				 }
-				 case 2:{
-					 //RefreshWDT();
-					 DelayMs(8);
-					 sstage = 3;
-				 }
-			 }
-			 if(sstage==3){
-				 sstep++;
-				 sstage = 0;
-			 }
-			 //debug
+			 doCommand(currentScenario[sstep]);
+			 sstep++;
 			 if(sstep>=stepsInCirce){ // сбрасываем счетчик для повтора команды
 				 sstep = 0;
 			 }

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "defines.h"
+#include "candle.h"
 
 /******************************************************************************
  * Funcs
