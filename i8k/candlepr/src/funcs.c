@@ -40,7 +40,7 @@ int initInw(){
     gRegisters[0x24] = 0;
     gRegisters[0x1f] = 0;
     gRegisters[0x27] = 0;
-    gRegisters[0x25] = (gRegisters[0x25]*1000<TOTAL_TIMEOUT)?TOTAL_TIMEOUT:gRegisters[0x25];
+    gRegisters[0x25] = (gRegisters[0x25]<TOTAL_TIMEOUT)?TOTAL_TIMEOUT:gRegisters[0x25];
     ClearSystemKey();
     return 0;
 }
@@ -86,6 +86,7 @@ int check(unsigned long di_d,unsigned long do_d, sWait do_to){
     else if( compare_bit(do_d,H_10)){// cutter left
         if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
             || !compare_bit(di_d,H_03)
+            || compare_bit(di_d,H_06)
         ) return ERROR_WRONG_COMAND;
     }
     else if( compare_bit(do_d,H_13) && (compare_bit(do_to.value,H_10)||compare_bit(do_to.value,H_11)) ){// up right press down
@@ -107,6 +108,7 @@ int check(unsigned long di_d,unsigned long do_d, sWait do_to){
     else if( compare_bit(do_d,H_19)){// cutter right
         if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
             || !compare_bit(di_d,H_09)
+            || compare_bit(di_d,H_12)
         ) return ERROR_WRONG_COMAND;
     }
     return 0;

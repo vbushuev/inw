@@ -4,14 +4,14 @@
 extern int gRegisters[128];
 int exception(int e){
 	e = -e;
-	if(gRegisters[0x1f] == 0) gRegisters[0x1f] = e;
-    ledn(15,e);
+	gRegisters[0x1f] = e;
+	gRegisters[0x20] = 0x80;
 	return 0;
 }
 int showError(){
 	int e = gRegisters[0x1f];
-	if(e==0){
-		Show5DigitLed(1,16);
+	if(e!=0){
+		/*sShow5DigitLed(1,16);
 	    Show5DigitLed(2,16);
 	    Show5DigitLed(3,16);
 	    Show5DigitLed(4,16);
@@ -30,7 +30,7 @@ int showError(){
 		 * 8 - Alarm
 		 */
 		gRegisters[0x27] = 8;
-    	ledn(14,e);
+    	//ledn(14,e);
 	}
 	return 0;
 }
@@ -127,7 +127,7 @@ void ledstr(char *str,int len){
 
 void ledn(int n,unsigned int s){
 	int p1,p2,p3,p4;
-	if(gRegisters[0x1f]!=0) return;
+	//if(gRegisters[0x1f]!=0) return;
 	Show5DigitLedWithDot(1,n);
 	p1 = s/4096;
 	p2 = (s-4096*p1)/256;
