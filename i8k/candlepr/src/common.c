@@ -203,9 +203,9 @@ void ledsOff(){
 	Show5DigitLed(4,16);
 	Show5DigitLed(5,16);
 }
-void inwPrint(char *s,...){
+/*void inwPrint(char *s,...){
 	return;
-}
+}*/
 int str_hex_to_ascii(byte* in,int len,byte* out){
 	byte s[256];
 	int i=0;

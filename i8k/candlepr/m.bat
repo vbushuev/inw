@@ -1,3 +1,4 @@
 cls
-del /Q /F dist\candle.exe,obj\*.obj
+del dist\candle.exe
+del obj\*.obj
 make -fmakefile

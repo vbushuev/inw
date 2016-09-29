@@ -139,7 +139,7 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
 	return ret;
 }
 int readModbus(){
-	int ret=0, i=0,inlen,outlen;
+	int ret=0, i=0,inlen;
 	byte inbuf[COMPORT_BUFFER_LENGTH],outbuf[COMPORT_BUFFER_LENGTH],response[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
 	byte *pbuf;
 	sModbusPack mb;
@@ -157,7 +157,7 @@ int readModbus(){
     memcpy(outbuf,inbuf,ret);
     outbuf[ret]='\r';
     outbuf[ret+1]='\n';
-    outlen=analyzeModBusASCII(&mb,outbuf);
+    analyzeModBusASCII(&mb,outbuf);
 	//serialize(&mb,outbuf);
 	ToComStr(COMPORT,outbuf);
 	//ToComStr(COMPORT,":010311112222333344445555F2\r\n");
@@ -197,7 +197,7 @@ int readModbusRTU(){
 	switch(mb.func){
 		case 0x01:
 		case 0x02:{// read coil registers
-			int tail=mb.data%8,ir=0;
+			int tail=mb.data%8;
 			out[0] = mb.addr;
 			out[1] = mb.func;
 			out[2] = (mb.data/8) + ((tail>0)?1:0);

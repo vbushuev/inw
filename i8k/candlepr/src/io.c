@@ -54,7 +54,7 @@ int readEncoder(int channel,long *data){
     //i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
 	i8080_ReadCntPulseDir(ECSLOT,channel,&count,&Overflow);
 	//*data = (long)Overflow * 0x80000000 + count;
-	*data = count;
+	memcpy(data,&count,4);
     return 0;
 }
 int encoder2mm(dword val){
@@ -66,6 +66,7 @@ int encoder2mm(dword val){
 int Encoder(int piston,long *d){
 	long value;
 	readEncoder(0+2*piston,&value);
+
 	*d = value;
 	gRegisters[0x23+piston] = encoder2mm(value);
 	return 0;

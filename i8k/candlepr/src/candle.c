@@ -116,9 +116,8 @@ int doCommand(sStep sstep){
         }
         else if(sstep.wait.type == 2){
             long lenc = 0,renc = 0;
-            unsigned int ld =0;
             if(gRegisters[0x30]==0){
-                Encoder(0,&lenc);
+                readEncoder(0,&lenc);
                 if( compare_bit(sstep.command,H_05) ) {
                     if((sstep.wait.value>=lenc)&&(lenc<50000))docirle = 0;
                 }
@@ -127,7 +126,7 @@ int doCommand(sStep sstep){
                 }
             }
             else{
-                Encoder(1,&renc);
+                readEncoder(1,&renc);
                 if (compare_bit(sstep.command,H_14)){
                     if((sstep.wait.value>=renc)&&(renc<50000))docirle = 0;
                 }
