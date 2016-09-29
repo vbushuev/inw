@@ -114,7 +114,7 @@ void ledstr(char *str,int len){
 	Show5DigitLed(3,10);
 	Show5DigitLed(4,13);
 	Show5DigitLed(5,10);
-	DelayMs(800);
+	//DelayMs(800);
 
 	Show5DigitLed(1,len%16);
 
@@ -153,7 +153,7 @@ void leds(int s){
 		Show5DigitLed(3,p2);
 		Show5DigitLed(4,p3);
 		Show5DigitLed(5,p4);
-	DelayMs(800);
+	//DelayMs(800);
 }
 
 void leds2(int s){
@@ -195,7 +195,7 @@ void leds2(int s){
 		Show5DigitLed(4,p3);
 		Show5DigitLed(5,p4);
 	}
-	DelayMs(800);
+	//DelayMs(800);
 }
 void ledsOff(){
 	Show5DigitLed(2,16);

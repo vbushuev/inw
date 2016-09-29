@@ -49,10 +49,10 @@ int makeBitArray(dword d,int*a){
 }
 int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
-    int ret = 0, docirle = 1;
-    dword ict = 0, iTimeout =0 , curTime = 0, curTimeout = 0;
-    dword di_data = 0, do_data = 0;
+    int ret = 0, docirle = 1, i = 0;
+    int *p;
     int bdo[32];
+    dword ict = 0, iTimeout =0 , curTime = 0, curTimeout = 0,di_data = 0, do_data = 0;
     do_data = sstep.command;
     // checks
     if(sstep.wait.type == 3 ){
@@ -92,14 +92,13 @@ int doCommand(sStep sstep){
     if(ret) return ret;
     ret =check (di_data, sstep.command,sstep.wait);
     if(ret) return ret;
-    if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);DelayMs(8);} // нижний поршень в верхнем положении левый(0)
-    if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);DelayMs(8);} // нижний поршень в верхнем положении right
+    if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);} // нижний поршень в верхнем положении левый(0)
+    if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);} // нижний поршень в верхнем положении right
     sendCommand(do_data);
     iTimeout = TimerReadValue();
     while(docirle){
     //while( iwaitTimeout ){
-        int i = 0;
-        int *p;
+
         readSignals(&di_data);
         // if sensors A6 & A12 - clearEncoder
         if((di_data&H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)

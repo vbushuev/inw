@@ -113,22 +113,21 @@ void main(void){
 	int sstep=0, stepsInCirce;
 	// DI_DO modules reading buffer
 	dword di_data=0,iTimeout=0;
-	long ulto;
 	// Console reading buffer;
-	unsigned char consoleTemp[10];
+	//unsigned char consoleTemp[10];
 	// Standart I/O buffer
-	char ioTemp[256];
+	//char ioTemp[256];
 	// Settings
 	//sRuntimeValues rtv;
 	//sTotalValues tv;
 	// scenarios
-	sStep *currentScenario = 0;
+	sStep *currentScenario = NULL;
 	// Start
 	ret = initInw();
 	if(ret)exception(ret);
 
-	clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-	clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+	//clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+	//clearEncoder(1); // нижний поршень в верхнем положении правый(1)
 	// Help messages to Console
 	// inwPrint("Please command (q-quit,c-clear)=");
 	//test_check();
@@ -428,7 +427,7 @@ void main(void){
  		 **************************************************************************/
 		 //gRegisters[0x26] = (int)(iTimeout%65536);
 		 counter++;
-		 DelayMs(8);
+		 DelayMs(16);
 		 //showError();
 	}
 	Return:
