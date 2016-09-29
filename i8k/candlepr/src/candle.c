@@ -49,14 +49,15 @@ int makeBitArray(dword d,int*a){
 }
 int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
-    int ret = 0, ict = 0, docirle = 1;
-    word iTimeout =0 , curTime = 0, curTimeout = 0;
+    int ret = 0, docirle = 1;
+    dword ict = 0, iTimeout =0 , curTime = 0, curTimeout = 0;
     dword di_data = 0, do_data = 0;
     int bdo[32];
     do_data = sstep.command;
     // checks
     if(sstep.wait.type == 3 ){
         ict = TimerReadValue() - iCircleTime;
+        TimerResetValue();
         iCircleTime = TimerReadValue();
         gRegisters[0x0c]++;
         gRegisters[0x0e] = ict;
@@ -68,6 +69,7 @@ int doCommand(sStep sstep){
     }
     else if(sstep.wait.type == 4 ){
         ict = TimerReadValue() - iCircleTime;
+        TimerResetValue();
         iCircleTime = TimerReadValue();
         gRegisters[0x0d]++;
         gRegisters[0x0f] = ict;
@@ -90,8 +92,8 @@ int doCommand(sStep sstep){
     if(ret) return ret;
     ret =check (di_data, sstep.command,sstep.wait);
     if(ret) return ret;
-    if(compare_bit(sstep.command,H_06)&&sstep.wait.type==2){clearEncoder(0);DelayMs(8);} // нижний поршень в верхнем положении левый(0)
-    if(compare_bit(sstep.command,H_15)&&sstep.wait.type==2){clearEncoder(1);DelayMs(8);} // нижний поршень в верхнем положении right
+    if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);DelayMs(8);} // нижний поршень в верхнем положении левый(0)
+    if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);DelayMs(8);} // нижний поршень в верхнем положении right
     sendCommand(do_data);
     iTimeout = TimerReadValue();
     while(docirle){
@@ -100,14 +102,14 @@ int doCommand(sStep sstep){
         int *p;
         readSignals(&di_data);
         // if sensors A6 & A12 - clearEncoder
-        if(compare_bit(di_data,H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-        if(compare_bit(di_data,H_12))clearEncoder(1); // нижний поршень в верхнем положении right
+        if((di_data&H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+        if((di_data&H_12))clearEncoder(1); // нижний поршень в верхнем положении right
         makeBitArray(di_data,p);
         for(i=0;i<32;i++){
-            if(p[i]==1 && compare_bit(do_data,diStopbits[i])) do_data^=diStopbits[i];
+            if(p[i]==1 && (do_data&diStopbits[i])) do_data^=diStopbits[i];
         }
         sendCommand(do_data);
-        if(sstep.wait.type==0 && compare_bit(di_data,sstep.wait.value)){
+        if(sstep.wait.type==0 && (di_data&sstep.wait.value)){
             docirle = 0;
         }
         else if(sstep.wait.type == 1){
@@ -118,20 +120,20 @@ int doCommand(sStep sstep){
             long lenc = 0,renc = 0;
             if(gRegisters[0x30]==0){
                 readEncoder(0,&lenc);
-                if( compare_bit(sstep.command,H_05) ) {
+                if( (sstep.command&H_05) ) {
                     if((sstep.wait.value>=lenc)&&(lenc<50000))docirle = 0;
                 }
-                else if (compare_bit(sstep.command,H_06)){
-                    if(!compare_bit(di_data,H_06)&&(sstep.wait.value<=lenc)&&(lenc<50000))docirle = 0;
+                else if ((sstep.command&H_06)){
+                    if(!(di_data&H_06)&&(sstep.wait.value<=lenc)&&(lenc<50000))docirle = 0;
                 }
             }
             else{
                 readEncoder(1,&renc);
-                if (compare_bit(sstep.command,H_14)){
+                if ((sstep.command&H_14)){
                     if((sstep.wait.value>=renc)&&(renc<50000))docirle = 0;
                 }
-                else if (compare_bit(sstep.command,H_15)){
-                    if(!compare_bit(di_data,H_12)&&(sstep.wait.value<=renc)&&(renc<50000))docirle = 0;
+                else if ((sstep.command&H_15)){
+                    if(!(di_data&H_12)&&(sstep.wait.value<=renc)&&(renc<50000))docirle = 0;
                 }
             }
         }
@@ -143,7 +145,6 @@ int doCommand(sStep sstep){
         //DelayMs(8);
     }
     sendCommand(sstep.finish);
-    TimerResetValue();
     return ret;
 }
 /*
@@ -157,8 +158,8 @@ int operation(sStep stp){
     ret =check (di_data, stp.command,stp.wait);
     if(ret) return ret;
     // if sensors A6 & A12 - clearEncoder
-    if(compare_bit(di_data,H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-    if(compare_bit(di_data,H_12))clearEncoder(1); // нижний поршень в верхнем положении левый(0)
+    if((di_data&H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+    if((di_data&H_12))clearEncoder(1); // нижний поршень в верхнем положении левый(0)
     //send
     sendCommand(stp.command);
     iTimeout = TimerReadValue();
@@ -166,7 +167,7 @@ int operation(sStep stp){
         if(stp.wait.type==2){
             ret = Encoder((gRegisters[0x30]==0)?0:1,&enc);
             if(ret)break;
-            if( (compare_bit(stp.comand,H_14)||compare_bit(stp.comand,H_05)){
+            if( ((stp.comand&H_14)||(stp.comand&H_05)){
                 if(stp.wait.value >= enc)break;
             }
             elseif(stp.wait.value <= enc)break;
@@ -176,7 +177,7 @@ int operation(sStep stp){
         }
         else if(stp.wait.type==0){
             ret = readSignals(&di_data);
-            if(compare_bit(di_data,H_01))break;
+            if((di_data&H_01))break;
             if((){
                 ret = ERROR_ALARM_DELAY;
                 break;

@@ -112,7 +112,7 @@ void main(void){
 	// scenario control
 	int sstep=0, stepsInCirce;
 	// DI_DO modules reading buffer
-	dword di_data=0,iTimeout=0,enc_data;
+	dword di_data=0,iTimeout=0;
 	long ulto;
 	// Console reading buffer;
 	unsigned char consoleTemp[10];
@@ -182,7 +182,7 @@ void main(void){
 		 switch (gRegisters[0x20]){
 			 case 0x1: {// Init scenario{}
 			 	if(!finished)break;
-				if(compare_bit(di_data,H_01)==1){
+				if((di_data&H_01)==1){
 					initScenario[6].command = H_02;
 				}
 				currentScenario = initScenario;
@@ -307,7 +307,7 @@ void main(void){
 					 finished = 0;
 					 sstep = 0;
 					 todo = 1;
-					 iCircleTime = TimerReadValue();
+					 iCircleTime = 0;// TimerReadValue();
 				 }
 				 break;
 			 }
@@ -393,11 +393,12 @@ void main(void){
 				 break;
 			 }
 			 case 0x80: {// Stop Signal
-				currentScenario = 0;
-				sstep = 0;
-				todo = 0;
-				finished = 1;
-				gRegisters[0x20] = 0;
+				 TimerResetValue();
+				 currentScenario = 0;
+				 sstep = 0;
+				 todo = 0;
+				 finished = 1;
+				 gRegisters[0x20] = 0;
 			 }break;
 		 }
 		 /**************************************************************************
@@ -425,10 +426,10 @@ void main(void){
 		 /**************************************************************************
  		 * external control section
  		 **************************************************************************/
-		 gRegisters[0x26] = (int)(iTimeout%65536);
+		 //gRegisters[0x26] = (int)(iTimeout%65536);
 		 counter++;
 		 DelayMs(8);
-		 showError();
+		 //showError();
 	}
 	Return:
 		deinitInw();
