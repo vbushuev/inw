@@ -95,11 +95,13 @@ int doCommand(sStep sstep){
     if(ret) return ret;
     if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);} // нижний поршень в верхнем положении левый(0)
     if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);} // нижний поршень в верхнем положении right
+<<<<<<< HEAD
     DelayMs(16);
+=======
+>>>>>>> origin/rev-00
     sendCommand(do_data);
     iTimeout = TimerReadValue();
     while(docirle){
-    //while( iwaitTimeout ){
         readSignals(&di_data);
         // if sensors A6 & A12 - clearEncoder
         if((di_data&H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
@@ -121,26 +123,10 @@ int doCommand(sStep sstep){
             if(gRegisters[0x30]==0){
                 readEncoder(0,&lenc);
                 if(((sstep.wait.value-gRegisters[49])<=lenc)&&(lenc<=(sstep.wait.value+gRegisters[49])))docirle = 0;
-                /*
-                if( (sstep.command&H_05) ) {
-                    if(sstep.wait.value>=lenc)docirle = 0;
-                }
-                else if ((sstep.command&H_06)){
-                    if(!(di_data&H_06)&&(sstep.wait.value<=lenc)&&(lenc<50000))docirle = 0;
-                }
-                */
             }
             else{
                 readEncoder(1,&renc);
                 if(((sstep.wait.value-gRegisters[49])<=renc)&&(renc<=(sstep.wait.value+gRegisters[49])))docirle = 0;
-                /*
-                if ((sstep.command&H_14)){
-                    if((sstep.wait.value>=renc)&&(renc<50000))docirle = 0;
-                }
-                else if ((sstep.command&H_15)){
-                    if(!(di_data&H_12)&&(sstep.wait.value<=renc)&&(renc<50000))docirle = 0;
-                }
-                */
             }
         }
         curTime = TimerReadValue()-iTimeout;
@@ -153,45 +139,3 @@ int doCommand(sStep sstep){
     sendCommand(sstep.finish);
     return ret;
 }
-/*
-int operation(sStep stp){
-    int ret = 0, iTimeout = 0;
-    dword di_data = 0;
-    long enc = 0;
-    //readSignalss
-    ret = readSignals(&di_data);
-    if(ret) return ret;
-    ret =check (di_data, stp.command,stp.wait);
-    if(ret) return ret;
-    // if sensors A6 & A12 - clearEncoder
-    if((di_data&H_06))clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-    if((di_data&H_12))clearEncoder(1); // нижний поршень в верхнем положении левый(0)
-    //send
-    sendCommand(stp.command);
-    iTimeout = TimerReadValue();
-    while((TimerReadValue()-iTimeout) <= 60000){
-        if(stp.wait.type==2){
-            ret = Encoder((gRegisters[0x30]==0)?0:1,&enc);
-            if(ret)break;
-            if( ((stp.comand&H_14)||(stp.comand&H_05)){
-                if(stp.wait.value >= enc)break;
-            }
-            elseif(stp.wait.value <= enc)break;
-        }
-        else if(stp.wait.type==1){
-            if( (TimerReadValue()-iTimeout)>= stp.wait.value) break;
-        }
-        else if(stp.wait.type==0){
-            ret = readSignals(&di_data);
-            if((di_data&H_01))break;
-            if((){
-                ret = ERROR_ALARM_DELAY;
-                break;
-            }
-        }
-    }
-    sendCommand(stp.finish);
-    return ret;
-}
-
-*/
