@@ -244,6 +244,6 @@ int readModbusRTU(){
 		}break;
 	}
 	ToComBufn(COMPORT,out,ret);
-	DelayMs(40);
+	//DelayMs(40);
     return ret;
 }

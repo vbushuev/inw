@@ -22,8 +22,8 @@ sStep initScenario[]={
 };
 sStep startScenario[]={
 	{H_05,{0,H_06},H_00,0},//00
-	{H_06,{2,H_00/*rtv.Lh*/},H_00,0},//00
-	{H_01,{0,H_01},H_00,0},//01
+	{H_06,{2,H_00/*rtv.Lh*/},H_00,0},//01
+	//{H_01,{0,H_01},H_00,0},//02
 	{H_00,{5,H_00},H_00,0} //02 finish
 };
 sStep mainScenario[]={
@@ -70,6 +70,20 @@ sStep testScenario[] = {
 	{H_01,{0,H_01},H_00,0},
 	{H_00,{5,H_00},H_00,0},  //23    Произвести фиксацию замеров для левого
 };
+sStep setupRightScenario[] = {
+   {H_12,{0,H_09},H_00,0},//00
+   {H_14,{0,H_12},H_00,0},//01
+   {H_15,{2,H_00},H_00,0},//02 LH
+   {H_02,{0,H_02},H_00,0},//03
+   {H_00,{1,1000},H_00,0},//04 timer
+   {H_01,{0,H_15},H_00,0},//05
+   {H_13,{0,H_10},H_00,0},//06
+   {H_14,{2,H_00},H_00,0},//07 LC
+   {H_13,{0,H_11},H_00,0},//08
+   {H_12,{0,H_09},H_00,0},//09
+   {H_14,{0,H_12},H_00,0},//10
+   {H_00,{5,H_00},H_00,0},  //11 Finish
+};
 sStep setupLeftScenario[] = {
    {H_03,{0,H_03},H_00,0},//00
    {H_05,{0,H_06},H_00,0},//01
@@ -88,21 +102,6 @@ sStep setupLeftScenario[] = {
    {H_07|H_09,{0,H_07},H_00,0},//14 move outs
    {H_00,{5,H_00},H_00,0},  //15 Finish
 };
-sStep setupRightScenario[] = {
-   {H_12,{0,H_09},H_00,0},//00
-   {H_14,{0,H_12},H_00,0},//01
-   {H_15,{2,H_00},H_00,0},//02 LH
-   {H_02,{0,H_02},H_00,0},//03
-   {H_00,{1,1000},H_00,0},//04 timer
-   {H_01,{0,H_15},H_00,0},//05
-   {H_13,{0,H_10},H_00,0},//06
-   {H_14,{2,H_00},H_00,0},//07 LC
-   {H_13,{0,H_11},H_00,0},//08
-   {H_12,{0,H_09},H_00,0},//09
-   {H_14,{0,H_12},H_00,0},//10
-   {H_00,{5,H_00},H_00,0},  //11 Finish
-};
-
 void main(void){
 	int ret;
 	// Timer value
@@ -112,30 +111,29 @@ void main(void){
 	// scenario control
 	int sstep=0, stepsInCirce;
 	// DI_DO modules reading buffer
-	dword di_data=0,iTimeout=0,enc_data;
-	long ulto;
+	dword di_data=0,iTimeout=0;
 	// Console reading buffer;
-	unsigned char consoleTemp[10];
+	//unsigned char consoleTemp[10];
 	// Standart I/O buffer
-	char ioTemp[256];
+	//char ioTemp[256];
 	// Settings
 	//sRuntimeValues rtv;
 	//sTotalValues tv;
 	// scenarios
-	sStep *currentScenario = 0;
+	sStep *currentScenario = NULL;
 	// Start
 	ret = initInw();
 	if(ret)exception(ret);
 
-	clearEncoder(0); // нижний поршень в верхнем положении левый(0)
-	clearEncoder(1); // нижний поршень в верхнем положении правый(1)
+	//clearEncoder(0); // нижний поршень в верхнем положении левый(0)
+	//clearEncoder(1); // нижний поршень в верхнем положении правый(1)
 	// Help messages to Console
 	// inwPrint("Please command (q-quit,c-clear)=");
 	//test_check();
 	// endless circle for main thread
 	gRegisters[0x20]=0x0;
 	// encoder delta
-	gRegisters[0x31]=0x32;
+	gRegisters[0x31]=0x05;
 	for(;;){
 	//while(counter<10){
 		/**************************************************************************
@@ -182,7 +180,7 @@ void main(void){
 		 switch (gRegisters[0x20]){
 			 case 0x1: {// Init scenario{}
 			 	if(!finished)break;
-				if(compare_bit(di_data,H_01)==1){
+				if((di_data&H_01)==1){
 					initScenario[6].command = H_02;
 				}
 				currentScenario = initScenario;
@@ -200,7 +198,7 @@ void main(void){
 			 	if(!finished)break;
 				startScenario[1].wait.value = gRegisters[0x03];
 		        currentScenario = startScenario;
-				stepsInCirce = 4;
+				stepsInCirce = 3;
 				finished = 0;
 				sstep = 0;
 				todo = 1;
@@ -307,7 +305,7 @@ void main(void){
 					 finished = 0;
 					 sstep = 0;
 					 todo = 1;
-					 iCircleTime = TimerReadValue();
+					 iCircleTime = 0;// TimerReadValue();
 				 }
 				 break;
 			 }
@@ -393,11 +391,12 @@ void main(void){
 				 break;
 			 }
 			 case 0x80: {// Stop Signal
-				currentScenario = 0;
-				sstep = 0;
-				todo = 0;
-				finished = 1;
-				gRegisters[0x20] = 0;
+				 TimerResetValue();
+				 currentScenario = 0;
+				 sstep = 0;
+				 todo = 0;
+				 finished = 1;
+				 gRegisters[0x20] = 0;
 			 }break;
 		 }
 		 /**************************************************************************
@@ -425,9 +424,10 @@ void main(void){
 		 /**************************************************************************
  		 * external control section
  		 **************************************************************************/
-		 gRegisters[0x26] = (int)(iTimeout%65536);
+		 //gRegisters[0x26] = (int)(iTimeout%65536);
 		 counter++;
-		 DelayMs(8);
+		 DelayMs(96);
+		 //i8080_AutoScan();
 		 showError();
 	}
 	Return:

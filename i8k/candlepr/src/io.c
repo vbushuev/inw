@@ -21,6 +21,9 @@ int readSignals(unsigned long *data){
  ******************************************************************************/
 int clearEncoder(int piston){
 	i8080_ClrCnt(ECSLOT,2*piston);
+	//i8080_AutoScan();
+	//i8080_RecoverDefaultSetting(ECSLOT);
+	//InitEncoder();
 	gRegisters[0x23+piston] = 0;
 	gRegisters[0x29+2*piston] = 0; // save old position;
 	gRegisters[0x28+2*piston] = 0; // current position;
@@ -50,11 +53,13 @@ int InitEncoder(){
 int readEncoder(int channel,long *data){
     int Overflow;
 	long count;
-	i8080_AutoScan();
-    //i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
-	i8080_ReadCntPulseDir(ECSLOT,channel,&count,&Overflow);
+	//if(channel)i8080_AutoScan();
+	//i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
+	i8080_ReadCntPulseDir(ECSLOT,0+2*channel,&count,&Overflow);
 	//*data = (long)Overflow * 0x80000000 + count;
 	memcpy(data,&count,4);
+	gRegisters[0x23+channel] = count;
+
     return 0;
 }
 int encoder2mm(dword val){
@@ -65,7 +70,7 @@ int encoder2mm(dword val){
 }
 int Encoder(int piston,long *d){
 	long value;
-	readEncoder(0+2*piston,&value);
+	readEncoder(piston,&value);
 
 	*d = value;
 	gRegisters[0x23+piston] = encoder2mm(value);

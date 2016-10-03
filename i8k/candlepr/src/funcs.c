@@ -55,60 +55,60 @@ int compare_bit(unsigned long d1,unsigned long d2){
     return 0;
 }
 int check(unsigned long di_d,unsigned long do_d, sWait do_to){
-    if( compare_bit(do_d,H_01) && compare_bit(do_to.value,H_01) ){// hobot moving left
-        if ( !compare_bit(di_d,H_03)
-            || compare_bit(di_d,H_06)
-            || !compare_bit(di_d,H_07)
+    if( (do_d&H_01) && (do_to.value&H_01) ){// hobot moving left
+        if ( !(di_d&H_03)
+            || (di_d&H_06)
+            || !(di_d&H_07)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_02) && compare_bit(do_to.value,H_02) ){// hobot moving right
-        if ( !compare_bit(di_d,H_09)
-            || compare_bit(di_d,H_12)
-            || !compare_bit(di_d,H_14)
+    else if( (do_d&H_02) && (do_to.value&H_02) ){// hobot moving right
+        if ( !(di_d&H_09)
+            || (di_d&H_12)
+            || !(di_d&H_14)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_04) && (compare_bit(do_to.value,H_04)||compare_bit(do_to.value,H_05)) ){// up left press down
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_02))
-            || compare_bit(di_d,H_06)
-            || !compare_bit(di_d,H_07)
+    else if( (do_d&H_04) && ((do_to.value&H_04)||(do_to.value&H_05)) ){// up left press down
+        if ( !((di_d&H_15) || (di_d&H_02))
+            || (di_d&H_06)
+            || !(di_d&H_07)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_05) && compare_bit(do_to.value,H_06) && (do_to.type!=2)){// left down press - up
-        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
+    else if( (do_d&H_05) && (do_to.value&H_06) && (do_to.type!=2)){// left down press - up
+        if ( !((di_d&H_15)|(di_d&H_02))
+            || !(di_d&H_03)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_08)){// уват левый
-        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
+    else if( (do_d&H_08)){// уват левый
+        if ( !((di_d&H_15)|(di_d&H_02))
+            || !(di_d&H_03)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_10)){// cutter left
-        if ( !(compare_bit(di_d,H_15)|compare_bit(di_d,H_02))
-            || !compare_bit(di_d,H_03)
-            || compare_bit(di_d,H_06)
+    else if( (do_d&H_10)){// cutter left
+        if ( !((di_d&H_15)|(di_d&H_02))
+            || !(di_d&H_03)
+            || (di_d&H_06)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_13) && (compare_bit(do_to.value,H_10)||compare_bit(do_to.value,H_11)) ){// up right press down
-        if ( !(compare_bit(di_d,H_01) || compare_bit(di_d,H_15))
-            || compare_bit(di_d,H_12)
-            || !compare_bit(di_d,H_14)
+    else if( (do_d&H_13) && ((do_to.value&H_10)||(do_to.value&H_11)) ){// up right press down
+        if ( !((di_d&H_01) || (di_d&H_15))
+            || (di_d&H_12)
+            || !(di_d&H_14)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_14) && compare_bit(do_to.value,H_12)  && (do_to.type!=2)){// right down press - up
-        if ( !( compare_bit(di_d,H_15)||compare_bit(di_d,H_01) )
-            || !compare_bit(di_d,H_09)
+    else if( (do_d&H_14) && (do_to.value&H_12)  && (do_to.type!=2)){// right down press - up
+        if ( !( (di_d&H_15)||(di_d&H_01) )
+            || !(di_d&H_09)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_16)){// ухват правый
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
-            || !compare_bit(di_d,H_09)
+    else if( (do_d&H_16)){// ухват правый
+        if ( !((di_d&H_15) || (di_d&H_01))
+            || !(di_d&H_09)
         ) return ERROR_WRONG_COMAND;
     }
-    else if( compare_bit(do_d,H_19)){// cutter right
-        if ( !(compare_bit(di_d,H_15) || compare_bit(di_d,H_01))
-            || !compare_bit(di_d,H_09)
-            || compare_bit(di_d,H_12)
+    else if( (do_d&H_19)){// cutter right
+        if ( !((di_d&H_15) || (di_d&H_01))
+            || !(di_d&H_09)
+            || (di_d&H_12)
         ) return ERROR_WRONG_COMAND;
     }
     return 0;
