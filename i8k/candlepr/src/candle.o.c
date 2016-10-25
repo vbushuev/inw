@@ -25,7 +25,7 @@ int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
     int ret = 0, docirle = 1, i = 0;
     dword ict = 0, iTimeout =0 , curTime = 0, di_data = 0, do_data = 0, d=0;
-    long lenc = 0, lenc_s = 0, renc = 0, renc_s = 0;
+    long lenc = 0, renc = 0;
 
     // checks
     if(sstep.wait.type == 3 ){
@@ -67,12 +67,8 @@ int doCommand(sStep sstep){
     if(ret) return ret;
     //if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);} // нижний поршень в верхнем положении левый(0)
     //if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);} // нижний поршень в верхнем положении right
-    //DelayMs(16);
+    DelayMs(16);
     do_data = sstep.command;
-    if(sstep.wait.type == 2){
-        if((sstep.command&H_06)||(sstep.command&H_05))lenc_s readEncoder2(0);
-        else renc_s readEncoder2(1);
-    }
     sendCommand(do_data);
     iTimeout = TimerReadValue();
     while(docirle){
@@ -94,19 +90,19 @@ int doCommand(sStep sstep){
         else if(sstep.wait.type == 1 && (curTime >= sstep.wait.value) ){docirle = 0;}
         else if(sstep.wait.type == 2){
             if((do_data&H_05) && !(di_data&H_06)){
-                if( (lenc_s - lenc) >= sstep.wait.value)docirle=0;
+                if(sstep.wait.value>=lenc)docirle=0;
                 gRegisters[0x30] = 0;
             }
             else if((do_data&H_06)&& !(di_data&H_06)){
-                if( (lenc - lenc_s) >= sstep.wait.value)docirle=0;
+                if(sstep.wait.value<=lenc)docirle=0;
                 gRegisters[0x30] = 0;
             }
             else if((do_data&H_14)&& !(di_data&H_12)){
-                if( (renc_s - renc) >= sstep.wait.value)docirle=0;
+                if(sstep.wait.value>=renc)docirle=0;
                 gRegisters[0x30] = 1;
             }
             else if((do_data&H_15)&& !(di_data&H_12)){
-                if( (renc - renc_s) >= sstep.wait.value)docirle=0;
+                if(sstep.wait.value<=renc)docirle=0;
                 gRegisters[0x30] = 1;
             }
             /*

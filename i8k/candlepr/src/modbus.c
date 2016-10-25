@@ -181,7 +181,7 @@ int readModbusRTU(){
 	memset(in,0,COMPORT_BUFFER_LENGTH);
 	memset(out,0,COMPORT_BUFFER_LENGTH);
 	// receive data
-	ret = Receive_Data_Length(in,8,200);
+	ret = Receive_Data_Length(in,8,1000);
 	//ret = Receive_Data(in,0xa,TOTAL_TIMEOUT);
     if(ret<=0) return 0;
 	//parse data

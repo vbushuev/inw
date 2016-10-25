@@ -24,6 +24,7 @@ int showError();
 int to_bytes(byte *s,int v);
 int to_bytes_i(byte *s,int v);
 void ledn(int n,unsigned int s);
+void ledword(int n,long s);
 void leds(int s);
 void ledstr(char *str,int len);
 void ledsOff();
@@ -33,9 +34,11 @@ int compare_bit(unsigned long d1,unsigned long d2);
  ******************************************************************************/
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
+unsigned long readSignals2();
 int InitEncoder();
 int Encoder(int piston,long *d);
 int Encoder2(int piston,unsigned long *data);
+long readEncoder2(int piston);
 /*
  Uses COM port to receive data with a terminative char.
  COMPORT:    COM port number to receive data.

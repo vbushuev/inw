@@ -16,6 +16,13 @@ int readSignals(unsigned long *data){
 	memcpy(data,&di,4);
 	return 0;
 }
+unsigned long readSignals2(){
+	unsigned long di;
+	di = DI_32(DISLOT);
+	//di = ~di;
+	gRegisters[0x21] = di;
+	return di;
+}
 /******************************************************************************
  * Encoder section
  ******************************************************************************/
@@ -61,6 +68,16 @@ int readEncoder(int channel,long *data){
 	gRegisters[0x23+channel] = count;
 
     return 0;
+}
+long readEncoder2(int channel){
+    int Overflow;
+	long count;
+	//if(channel)i8080_AutoScan();
+	//i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
+	i8080_ReadCntPulseDir(ECSLOT,0+2*channel,&count,&Overflow);
+	//ledword(0xe,count);
+	gRegisters[0x23+channel] = count;
+    return count;
 }
 int encoder2mm(dword val){
 	dword r=0;

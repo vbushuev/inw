@@ -74,12 +74,13 @@ int check(unsigned long di_d,unsigned long do_d, sWait do_to){
         ) return ERROR_WRONG_COMAND;
     }
     else if( (do_d&H_05) && (do_to.value&H_06) && (do_to.type!=2)){// left down press - up
-        if ( !((di_d&H_15)|(di_d&H_02))
+        //if ( !((di_d&H_15)|(di_d&H_02))
+        if ( (di_d&H_01)
             || !(di_d&H_03)
         ) return ERROR_WRONG_COMAND;
     }
     else if( (do_d&H_08)){// уват левый
-        if ( !((di_d&H_15)|(di_d&H_02))
+        if ( (di_d&H_01)
             || !(di_d&H_03)
         ) return ERROR_WRONG_COMAND;
     }
@@ -96,12 +97,13 @@ int check(unsigned long di_d,unsigned long do_d, sWait do_to){
         ) return ERROR_WRONG_COMAND;
     }
     else if( (do_d&H_14) && (do_to.value&H_12)  && (do_to.type!=2)){// right down press - up
-        if ( !( (di_d&H_15)||(di_d&H_01) )
+        //if ( !( (di_d&H_15)||(di_d&H_01) )
+        if ( (di_d&H_02)
             || !(di_d&H_09)
         ) return ERROR_WRONG_COMAND;
     }
     else if( (do_d&H_16)){// ухват правый
-        if ( !((di_d&H_15) || (di_d&H_01))
+        if ( (di_d&H_02)
             || !(di_d&H_09)
         ) return ERROR_WRONG_COMAND;
     }

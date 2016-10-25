@@ -210,12 +210,12 @@ void main(void){
 			 }break;
 			 case 0x5: {// Main scenario{}
 			 	if(!finished)break;
-				mainScenario[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
+				mainScenario[1].wait.value = gRegisters[0x02];
 				//mainScenario[6].wait.value = gRegisters[0x0b]; // ttaker
 				mainScenario[6].wait.value = gRegisters[0x03];
 				mainScenario[7].wait.value = gRegisters[0x00];// v10
 
-				mainScenario[12].wait.value = gRegisters[0x05] - gRegisters[0x04];
+				mainScenario[12].wait.value = gRegisters[0x04];
 				//mainScenario[19].wait.value = gRegisters[0x0b]; // ttaker
 				mainScenario[17].wait.value = gRegisters[0x05];
 				mainScenario[18].wait.value = gRegisters[0x01]; //V19
@@ -274,14 +274,14 @@ void main(void){
 						case 0x09: {testScenario[0].command = H_02; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_02;break;}
 						case 0x0a: {testScenario[0].command = H_02; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_15;break;}
 						case 0x0b: {testScenario[0].command = H_05; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_06;break;}
-						case 0x0c: {testScenario[0].command = H_05; testScenario[0].wait.type = 2;testScenario[0].wait.value = gRegisters[0x03] - gRegisters[0x02];break;}
+						case 0x0c: {testScenario[0].command = H_05; testScenario[0].wait.type = 2;testScenario[0].wait.value = gRegisters[0x02];break;}
 						case 0x0d: {testScenario[0].command = H_06; testScenario[0].wait.type = 2;testScenario[0].wait.value = gRegisters[0x03];break;}
 
 						case 0x0e: {testScenario[0].command = H_12; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_09;gRegisters[0x30]=1;break;}
 						case 0x0f: {testScenario[0].command = H_13; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_10;gRegisters[0x30]=1;break;}
 						case 0x10: {testScenario[0].command = H_13; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_11;gRegisters[0x30]=1;break;}
 						case 0x11: {testScenario[0].command = H_14; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_12;gRegisters[0x30]=1;break;}
-						case 0x12: {testScenario[0].command = H_14; testScenario[0].wait.type = 2;gRegisters[0x30]=1;testScenario[0].wait.value = gRegisters[0x05] - gRegisters[0x04];break;}
+						case 0x12: {testScenario[0].command = H_14; testScenario[0].wait.type = 2;gRegisters[0x30]=1;testScenario[0].wait.value = gRegisters[0x04];break;}
 						case 0x13: {testScenario[0].command = H_15; testScenario[0].wait.type = 2;gRegisters[0x30]=1;testScenario[0].wait.value = gRegisters[0x05];break;}
 
 						case 0x14: {testScenario[0].command = H_07; testScenario[0].wait.type = 0; testScenario[0].wait.value = H_07;break;}
@@ -348,7 +348,7 @@ void main(void){
 				else{
 					setupLeftScenario[2].wait.value = gRegisters[0x03];
 					setupLeftScenario[4].wait.value = gRegisters[0x0b];
-	 				setupLeftScenario[7].wait.value = gRegisters[0x03] - gRegisters[0x02];
+	 				setupLeftScenario[7].wait.value = gRegisters[0x02];
 
 					setupLeftScenario[11].wait.value = 100; // timer wait
 					setupLeftScenario[12].wait.value = gRegisters[0x03]; // LH
@@ -371,7 +371,7 @@ void main(void){
 				 if(!finished)break;
 				 setupRightScenario[2].wait.value = gRegisters[0x05];
 				 setupRightScenario[4].wait.value = gRegisters[0x0b];
- 				 setupRightScenario[7].wait.value = gRegisters[0x05] - gRegisters[0x04];
+ 				 setupRightScenario[7].wait.value = gRegisters[0x04];
 				 currentScenario = setupRightScenario;
  				 stepsInCirce = 12;
  				 finished = 0;
