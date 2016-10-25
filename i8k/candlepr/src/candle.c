@@ -25,7 +25,7 @@ int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
     int ret = 0, docirle = 1, i = 0;
     dword ict = 0, iTimeout =0 , curTime = 0, di_data = 0, do_data = 0, d=0;
-    long lenc = 0, lenc_s = 0, renc = 0, renc_s = 0;
+    long enc = 0, enc_s = 0;
 
     // checks
     if(sstep.wait.type == 3 ){
@@ -69,20 +69,18 @@ int doCommand(sStep sstep){
     //if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);} // нижний поршень в верхнем положении right
     //DelayMs(16);
     do_data = sstep.command;
-    if(sstep.wait.type == 2){
-        if((sstep.command&H_06)||(sstep.command&H_05))lenc_s readEncoder2(0);
-        else renc_s readEncoder2(1);
-    }
     sendCommand(do_data);
+    DelayMs(16);
+    if(sstep.wait.type == 2){
+        if((sstep.command&H_06)||(sstep.command&H_05))enc_s = readEncoder2(0);
+        else enc_s = readEncoder2(1);
+    }
     iTimeout = TimerReadValue();
     while(docirle){
         di_data = readSignals2();
         // if sensors A6 & A12 - clearEncoder
-        if((di_data&H_06)){clearEncoder(0);lenc=0;} // нижний поршень в верхнем положении левый(0)
-        else lenc = readEncoder2(0);
-        if((di_data&H_12)){clearEncoder(1);renc=0;} // нижний поршень в верхнем положении right
-        else renc = readEncoder2(1);
-        //makeBitArray(di_data,p);
+        if((di_data&H_06)){clearEncoder(0);enc_s=0;enc=0;} // нижний поршень в верхнем положении левый(0)
+        if((di_data&H_12)){clearEncoder(1);enc_s=0;enc=0;} // нижний поршень в верхнем положении right
         d = di_data;
         for(i=0; i<sizeof(diStopbits); i++){
             if((d & 1) && (do_data&diStopbits[i]) ) do_data^=diStopbits[i];
@@ -94,19 +92,23 @@ int doCommand(sStep sstep){
         else if(sstep.wait.type == 1 && (curTime >= sstep.wait.value) ){docirle = 0;}
         else if(sstep.wait.type == 2){
             if((do_data&H_05) && !(di_data&H_06)){
-                if( (lenc_s - lenc) >= sstep.wait.value)docirle=0;
+                enc = readEncoder2(0);
+                if( (enc_s - enc) >= sstep.wait.value)docirle=0;
                 gRegisters[0x30] = 0;
             }
             else if((do_data&H_06)&& !(di_data&H_06)){
-                if( (lenc - lenc_s) >= sstep.wait.value)docirle=0;
+                enc = readEncoder2(0);
+                if( (enc - enc_s) >= sstep.wait.value)docirle=0;
                 gRegisters[0x30] = 0;
             }
             else if((do_data&H_14)&& !(di_data&H_12)){
-                if( (renc_s - renc) >= sstep.wait.value)docirle=0;
+                enc = readEncoder2(1);
+                if( (enc_s - enc) >= sstep.wait.value)docirle=0;
                 gRegisters[0x30] = 1;
             }
             else if((do_data&H_15)&& !(di_data&H_12)){
-                if( (renc - renc_s) >= sstep.wait.value)docirle=0;
+                enc = readEncoder2(1);
+                if( (enc - enc_s) >= sstep.wait.value)docirle=0;
                 gRegisters[0x30] = 1;
             }
             /*
