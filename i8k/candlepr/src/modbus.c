@@ -1,6 +1,83 @@
 #include "funcs.h"
-extern int gRegisters[128];
-
+extern unsigned int gRegisters[128];
+byte in[COMPORT_BUFFER_LENGTH];
+byte out[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
+int readModbusRTU(){
+	int ret=0, i=0;//,inlen,outlen;
+	unsigned int crc;
+	sModbusPack mb;
+	// clean buffers
+	memset(in,0,COMPORT_BUFFER_LENGTH);
+	memset(out,0,COMPORT_BUFFER_LENGTH);
+	// receive data
+	ret = Receive_Data_Length(in,8,1000);
+	//ret = Receive_Data(in,0xa,TOTAL_TIMEOUT);
+    if(ret<=0) return 0;
+	//parse data
+	mb.addr = in[0];
+	mb.func = in[1];
+	mb.reg	= in[2]*256 + in[3];
+	mb.data = in[4]*256 + in[5];
+	mb.lrc	= in[6]*256 + in[7];
+	/*ledn(0xa,mb.addr);DelayMs(600);
+	ledn(0xf,mb.func);DelayMs(600);
+	ledn(16,mb.reg);DelayMs(600);
+	ledn(0xd,mb.data);DelayMs(600);*/
+	switch(mb.func){
+		case 0x01:
+		case 0x02:{// read coil registers
+			int tail=mb.data%8;
+			out[0] = mb.addr;
+			out[1] = mb.func;
+			out[2] = (mb.data/8) + ((tail>0)?1:0);
+			mb.response_size=(int)out[2];
+			if(mb.response_size>COMPORT_BUFFER_LENGTH-5) mb.response_size = COMPORT_BUFFER_LENGTH-8;
+			for(i=0;i<mb.response_size;i++){
+				byte bt[2];
+				bt[1]=gRegisters[mb.reg+i]/256;
+				bt[0]=gRegisters[mb.reg+i]%256;
+				memcpy(out+3+(2*i),bt,2);
+            }
+			if(tail>0){
+				out[mb.response_size+2] <<= (8-tail);
+				out[mb.response_size+2] >>= (8-tail);
+			}
+			crc=CRC16(out,mb.response_size+3);
+			//ledn(0xc,crc);
+		    mb.lrc=crc;
+			out[mb.response_size+3] = crc%256;
+			out[mb.response_size+4] = crc/256;
+			ret = mb.response_size+5;
+		}break;
+		case 0x03:
+        case 0x04:{ // read coil registers
+			out[0] = mb.addr;
+			out[1] = mb.func;
+			out[2] = 2*mb.data;
+            for(i=0;i<mb.data;i++){
+                out[3+(2*i)] = gRegisters[mb.reg+i]/256;
+				out[3+(2*i)+1] =gRegisters[mb.reg+i]%256;
+            }
+			mb.response_size=2*mb.data;
+			crc=CRC16(out,mb.response_size+3);
+			//ledn(0xc,crc);
+		    mb.lrc=crc;
+			out[mb.response_size+3] = crc%256;
+			out[mb.response_size+4] = crc/256;
+			ret = mb.response_size+5;
+		}break;
+        case 0x05:
+		case 0x06:{ // write single register
+			memcpy(out,in,ret);
+			gRegisters[mb.reg] = mb.data;
+            setRegisters();
+		}break;
+	}
+	ToComBufn(COMPORT,out,ret);
+	Delay(4);
+    return ret;
+}
+/*
 sModbusPack parse(byte* in){
 	sModbusPack ret;
     ret.colon=':';
@@ -79,10 +156,10 @@ int analyzeModBusASCII(psModbusPack pmb,byte* outbuf){
             if(ret!=0)exception(ret);
 		}break;
 	}
-    /*Show5DigitLed(1,10); leds(pmb->addr);//addr
-	Show5DigitLed(1,15); leds(pmb->func);
-	Show5DigitLed(1,13); leds(pmb->reg);
-	Show5DigitLed(1,17); leds(pmb->data);*/
+    //Show5DigitLed(1,10); leds(pmb->addr);//addr
+	//Show5DigitLed(1,15); leds(pmb->func);
+	//Show5DigitLed(1,13); leds(pmb->reg);
+	//Show5DigitLed(1,17); leds(pmb->data);
 	return ret;
 }
 int analyzeModBus(psModbusPack pmb,byte* outbuf){
@@ -132,10 +209,10 @@ int analyzeModBus(psModbusPack pmb,byte* outbuf){
             if(ret!=0)exception(ret);
 		}break;
 	}
-    /*Show5DigitLed(1,10); leds(pmb->addr);//addr
-	Show5DigitLed(1,15); leds(pmb->func);
-	Show5DigitLed(1,13); leds(pmb->reg);
-	Show5DigitLed(1,17); leds(pmb->data);*/
+    //Show5DigitLed(1,10); leds(pmb->addr);//addr
+	//Show5DigitLed(1,15); leds(pmb->func);
+	//Show5DigitLed(1,13); leds(pmb->reg);
+	//Show5DigitLed(1,17); leds(pmb->data);
 	return ret;
 }
 int readModbus(){
@@ -172,78 +249,4 @@ int readModbus(){
 
     return ret;
 }
-int readModbusRTU(){
-	int ret=0, i=0,inlen,outlen;
-	unsigned int crc;
-	byte in[COMPORT_BUFFER_LENGTH],out[COMPORT_BUFFER_LENGTH];//=":010311112222333344445555";
-	sModbusPack mb;
-	// clean buffers
-	memset(in,0,COMPORT_BUFFER_LENGTH);
-	memset(out,0,COMPORT_BUFFER_LENGTH);
-	// receive data
-	ret = Receive_Data_Length(in,8,1000);
-	//ret = Receive_Data(in,0xa,TOTAL_TIMEOUT);
-    if(ret<=0) return 0;
-	//parse data
-	mb.addr = in[0];
-	mb.func = in[1];
-	mb.reg	= in[2]*256 + in[3];
-	mb.data = in[4]*256 + in[5];
-	mb.lrc	= in[6]*256 + in[7];
-	/*ledn(0xa,mb.addr);DelayMs(600);
-	ledn(0xf,mb.func);DelayMs(600);
-	ledn(16,mb.reg);DelayMs(600);
-	ledn(0xd,mb.data);DelayMs(600);*/
-	switch(mb.func){
-		case 0x01:
-		case 0x02:{// read coil registers
-			int tail=mb.data%8;
-			out[0] = mb.addr;
-			out[1] = mb.func;
-			out[2] = (mb.data/8) + ((tail>0)?1:0);
-			mb.response_size=(int)out[2];
-			for(i=0;i<mb.response_size;i++){
-				byte bt[2];
-                to_bytes_i(bt,gRegisters[mb.reg+i]);
-				memcpy(out+3+(2*i),bt,2);
-            }
-			if(tail>0){
-				out[mb.response_size+2] <<= (8-tail);
-				out[mb.response_size+2] >>= (8-tail);
-			}
-			crc=CRC16(out,mb.response_size+3);
-			//ledn(0xc,crc);
-		    mb.lrc=crc;
-			out[mb.response_size+3] = crc%256;
-			out[mb.response_size+4] = crc/256;
-			ret = mb.response_size+5;
-		}break;
-		case 0x03:
-        case 0x04:{ // read coil registers
-			out[0] = mb.addr;
-			out[1] = mb.func;
-			out[2] = 2*mb.data;
-            for(i=0;i<mb.data;i++){
-                byte bt[2];
-                to_bytes(bt,gRegisters[mb.reg+i]);
-                memcpy(out+3+(2*i),bt,2);
-            }
-			mb.response_size=2*mb.data;
-			crc=CRC16(out,mb.response_size+3);
-			//ledn(0xc,crc);
-		    mb.lrc=crc;
-			out[mb.response_size+3] = crc%256;
-			out[mb.response_size+4] = crc/256;
-			ret = mb.response_size+5;
-		}break;
-        case 0x05:
-		case 0x06:{ // write single register
-			memcpy(out,in,ret);
-			gRegisters[mb.reg] = mb.data;
-            setRegisters();
-		}break;
-	}
-	ToComBufn(COMPORT,out,ret);
-	//DelayMs(40);
-    return ret;
-}
+*/

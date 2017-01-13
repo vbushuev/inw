@@ -11,8 +11,8 @@
  * Funcs
  ******************************************************************************/
 void inwPrint(char *s,...);
-int initInw();
-void deinitInw();
+int initInw(void);
+void deinitInw(void);
 int check(unsigned long di_d, unsigned long do_d, sWait do_to);
 /******************************************************************************
  * Common
@@ -20,25 +20,28 @@ int check(unsigned long di_d, unsigned long do_d, sWait do_to);
 /*int log(byte*msg,...);*/
 int logCOM(byte*in,int il,byte*out,int ol);
 int exception(int e);
-int showError();
+int showError(void);
 int to_bytes(byte *s,int v);
 int to_bytes_i(byte *s,int v);
 void ledn(int n,unsigned int s);
 void ledword(int n,long s);
 void leds(int s);
 void ledstr(char *str,int len);
-void ledsOff();
+void ledsOff(void);
 int compare_bit(unsigned long d1,unsigned long d2);
 /******************************************************************************
  * I\O
  ******************************************************************************/
 int sendCommand(unsigned long command);
 int readSignals(unsigned long *data);
-unsigned long readSignals2();
-int InitEncoder();
+unsigned long readSignals2(void);
+int InitEncoder(void);
+int clearEncoder(int piston);
 int Encoder(int piston,long *d);
 int Encoder2(int piston,unsigned long *data);
 long readEncoder2(int piston);
+int initComPort(void);
+int closeComPort(void);
 /*
  Uses COM port to receive data with a terminative char.
  COMPORT:    COM port number to receive data.
@@ -115,13 +118,15 @@ int getRuntime(psRuntimeValues prtv);
 int setRuntime(sRuntimeValues rtv);
 int getTotal(psTotalValues ptv);
 int setTotal(sTotalValues tv);
-int getRegisters();
-int setRegisters();
+int getRegisters(void);
+int setRegisters(void);
 
 /******************************************************************************
  * ModBus implementation
  ******************************************************************************/
-int readModbus();
+int readModbus(void);
+int readModbusRTU(void);
 int str_hex_to_ascii(byte* in,int len,byte* out);
 
+unsigned int CRC16 (const BYTE *nData, WORD wLength);
 #endif

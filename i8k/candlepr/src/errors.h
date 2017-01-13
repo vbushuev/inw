@@ -8,6 +8,7 @@
 #define ERROR_WRONG_COMAND - 4
 #define ERROR_UNABLED_COMMAND - 5
 #define ERROR_NOT_INITIATED - 6
+#define ERROR_UNKNOWN -7
 #define ERROR_ENCODER_NOTFOUND -17 //1 0001 - inwPrint("Initiate 8080 on slot%d error!\n\r",ECSLOT);
 #define ERROR_ENCODER_UBNORMAL -18 //1 0010 - Ubnormal encoder state, need calibration
 

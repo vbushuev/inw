@@ -6,11 +6,12 @@ int exception(int e){
 	e = -e;
 	gRegisters[0x1f] = e;
 	gRegisters[0x20] = 0x80;
-	gRegisters[0x27] = 8;
+	//gRegisters[0x27] = 8;
 	return 0;
 }
 int showError(){
 	int e = gRegisters[0x1f];
+	ledn(14,e);
 	if(e!=0){
 		/*sShow5DigitLed(1,16);
 	    Show5DigitLed(2,16);
@@ -31,7 +32,7 @@ int showError(){
 		 * 8 - Alarm
 		 */
 
-    	//ledn(14,e);
+
 	}
 	return 0;
 }
@@ -140,26 +141,7 @@ void ledn(int n,unsigned int s){
 	Show5DigitLed(5,p4);
 	//DelayMs(800);
 }
-void ledword(int n,long s){
-	int p1,p2,p3,p4;
-	//if(gRegisters[0x1f]!=0) return;
-	if(s<0){
-		Show5DigitLedWithDot(1,17);
-		s=-s;
-	}
-	else{
-		Show5DigitLedWithDot(1,n);
-	}
-	p1 = s/4096;
-	p2 = (s-4096*p1)/256;
-	p3 = (s-4096*p1-p2*256)/16;
-	p4 = (s-4096*p1-p2*256-p3*16);
-	Show5DigitLed(2,p1);
-	Show5DigitLed(3,p2);
-	Show5DigitLed(4,p3);
-	Show5DigitLed(5,p4);
-	//DelayMs(800);
-}
+
 void leds(int s){
 	int p1,p2,p3,p4;
 	if(s<0){
@@ -254,7 +236,7 @@ int to_bytes_i(byte *s,int v){
 }
 int getRegisters(){
 	int r=0;
-    r=EE_MultiRead_L(0,256,(int*)gRegisters);
+    r=EE_MultiRead_L(0,256,(unsigned int*)gRegisters);
     return (r==-1)?ERROR_EEPROM_WRITE:0;
 }
 int setRegisters(){

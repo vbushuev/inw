@@ -1,10 +1,10 @@
 #include "funcs.h"
-extern int gRegisters[128];
+extern unsigned int gRegisters[128];
 /*
  * Initialize inw
  */
 int initInw(){
-    int iRet=0,channel;
+    int iRet=0;
     /*
     byte tV10;byte tV19;
    int LC;int Lh;int Lr;
@@ -23,8 +23,10 @@ int initInw(){
     Show5DigitLed(5,16);
 
     // i8000 has only one systimer
-	TimerOpen();
-	TimerResetValue();
+	//TimerOpen();
+	//TimerResetValue();
+
+    EnableWDT();
 
 	//InitEncoder
 	iRet=i8080_InitDriver(ECSLOT);
@@ -40,12 +42,16 @@ int initInw(){
     gRegisters[0x24] = 0;
     gRegisters[0x1f] = 0;
     gRegisters[0x27] = 0;
-    gRegisters[0x25] = (gRegisters[0x25]<TOTAL_TIMEOUT)?TOTAL_TIMEOUT:gRegisters[0x25];
+    if(gRegisters[0x25]>8000){
+        gRegisters[0x25] = TOTAL_TIMEOUT;
+        setRegisters();
+    }    
     ClearSystemKey();
     return 0;
 }
 void deinitInw(){
-    TimerClose();
+    //TimerClose();
+    DisableWDT();
     closeComPort();
     setRegisters();
 }

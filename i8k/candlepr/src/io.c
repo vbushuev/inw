@@ -1,5 +1,5 @@
 #include "funcs.h"
-extern word gRegisters[128];
+extern unsigned int gRegisters[128];
 /******************************************************************************
  * DI/DO
  ******************************************************************************/
@@ -132,7 +132,8 @@ int Encoder3(int piston,unsigned long *data){
  * ComPort section
  ******************************************************************************/
 int initComPort(){
-    InstallCom(COMPORT,115200,8,0,1);
+    //InstallCom(COMPORT,115200L,8,0,1);
+    InstallCom(COMPORT,9600L,8,0,1);
     return 0;
 }
 int closeComPort(){
@@ -166,10 +167,10 @@ int Receive_Data(unsigned char* cInBuf,char cTerminator,long lTimeout){
  	else return 0;
 }
 int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
-
-	unsigned char cChar;
+	//unsigned char cChar;
 	int iIndex=0;
  	unsigned long lStartTime;
+	//EnableWDT();
  	if(IsCom(COMPORT)){
 		lStartTime=GetTimeTicks();
 	 	for(;;){
@@ -185,7 +186,8 @@ int Receive_Data_Length(unsigned char* cInBuf,int iLength,long lTimeout){
 			RefreshWDT();
 	 	}
  	}
- 	else return 0;
+	//DisableWDT();
+ 	return 0;
 }
 /******************************************************************************
  * IniFie section
@@ -295,7 +297,7 @@ int GetProFileStr(FILE_DATA far *file_pointer,char* sKeyName,char* sResult,char*
 
     unsigned long lPointer=0;
     char sTemp[20];
-    int i,iLen;
+    int i;//,iLen;
 
     strlwr(sKeyName);
 
