@@ -5,7 +5,7 @@ extern unsigned int gRegisters[128];
 int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
     int ret = 0;
-    dword di_data = 0, do_data = 0;//ict = 0
+    dword di_data = 0, do_data = 0, did = 0;//ict = 0
     long  iTimeout =0 , curTime = 0, commonTO=5000;
     //long enc = 0, enc_s = 0;
     dword enc = 0, enc_s = 0;
@@ -73,10 +73,10 @@ int doCommand(sStep sstep){
             break;
         }
         di_data = readSignals2();
-        RefreshWDT();
-        /*d = di_data;
+
+        did = di_data;
         for(i=0; i<14; i++){
-            if(d & 1) {
+            if(did & 1) {
                 switch(i){
                     case 0:if(do_data&H_01){do_data^=H_01;}break;//A1
                     case 1:if(do_data&H_02){do_data^=H_02;}break;//A2
@@ -95,9 +95,8 @@ int doCommand(sStep sstep){
                 }
                 sendCommand(do_data);
             }
-            d>>=1;
-        }*/
-        //x
+            did>>=1;
+        }
         // if sensors A6 & A12 - clearEncoder
         if((di_data&H_06)&&(do_data&H_06)){clearEncoder(0);enc_s=0;enc=0;}//Delay(8);} // нижний поршень в верхнем положении левый(0)
         if((di_data&H_12)&&(do_data&H_15)){clearEncoder(1);enc_s=0;enc=0;}//Delay(8);} // нижний поршень в верхнем положении right
@@ -125,23 +124,11 @@ int doCommand(sStep sstep){
                 if( (enc - enc_s) >= sstep.wait.value){break;}
                 gRegisters[0x30] = 1;
             }
-            /*
-            long lenc = 0,renc = 0;
-            if(gRegisters[0x30]==0){
-                readEncoder(0,&lenc);
-                if(((sstep.wait.value-gRegisters[49])<=lenc)&&(lenc<=(sstep.wait.value+gRegisters[49])))break;
-            }
-            else{
-                readEncoder(1,&renc);
-                //if(((sstep.wait.value-gRegisters[49])<=renc)&&(renc<=(sstep.wait.value+gRegisters[49])))break;
-            }*/
         }
-
-        //Delay(8);
-
+        RefreshWDT();
     }
     sendCommand(sstep.finish);
-    //sendCommand(sstep.finish);
+    RefreshWDT();
     return ret;
 }
 /*

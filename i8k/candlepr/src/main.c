@@ -439,7 +439,7 @@ void main(void){
 	 		    bonusScenario[7].wait.value = gRegisters[0x03];
 	 		    bonusScenario[8].wait.value = gRegisters[0x00];// v10
 
-	 		   currentScenario = bonusScenario; 
+	 		   currentScenario = bonusScenario;
 	 		   stepsInCirce = 11;
 	 		   finished = 0;
 	 		   sstep = 0;
@@ -488,7 +488,6 @@ void main(void){
 			 if(sstep >= stepsInCirce){ // сбрасываем счетчик для повтора команды
 				 sstep = 0;
 			 }
-
 		 }
 
 		 //if(currentScenario!=0)ledn(16,currentScenario[sstep].wait.type*256+sstep*16+sstage);
