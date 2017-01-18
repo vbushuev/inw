@@ -4,11 +4,12 @@
 extern unsigned int gRegisters[128];
 int doCommand(sStep sstep){
     //dword do_, dword di_,int timer, int sstep.wait.value,dword finish
-    int ret = 0;
+    int ret = 0,encoderTimeout = 40;
     dword di_data = 0, do_data = 0, did = 0;//ict = 0
     long  iTimeout =0 , curTime = 0, commonTO=5000;
     //long enc = 0, enc_s = 0;
     dword enc = 0, enc_s = 0;
+    encoderTimeout = (gRegisters[0x32]>0&&gRegisters[0x32]<200)?gRegisters[0x32]:encoderTimeout;
     //commonTO = gRegisters[0x25];
     di_data = readSignals2();//Delay(8);
     // checks
@@ -51,7 +52,7 @@ int doCommand(sStep sstep){
     //readSignalss
 
 
-    ret =check(di_data, sstep.command,sstep.wait);
+    ret = check(di_data, sstep.command,sstep.wait);
     if(ret) return ret;
     //if((sstep.command&H_06)&&sstep.wait.type==2){clearEncoder(0);} // нижний поршень в верхнем положении левый(0)
     //if((sstep.command&H_15)&&sstep.wait.type==2){clearEncoder(1);} // нижний поршень в верхнем положении right
@@ -61,13 +62,18 @@ int doCommand(sStep sstep){
     sendCommand(do_data);
     //Delay(8);
     if(sstep.wait.type == 2){
-        Delay(32);
-        if((sstep.command&H_06)||(sstep.command&H_05))enc_s = readEncoder2(0);
+        encoderTimeout = (gRegisters[0x32]>0&&gRegisters[0x32]<200)?gRegisters[0x32]:encoderTimeout;
+        Delay(encoderTimeout);
+        //if((sstep.command&H_06)||(sstep.command&H_05))enc_s = readEncoder2(0);
+        if(sstep.command&H_05)enc_s = readEncoder2(0);
         else enc_s = readEncoder2(1);
     }
-    iTimeout = GetTimeTicks();
+    //iTimeout = GetTimeTicks();
+
+    TimerResetValue();
+    iTimeout = TimerReadValue();
     for(;;){
-        curTime = GetTimeTicks();
+        curTime = TimerReadValue();
         if( (curTime-iTimeout) >= commonTO){
             ret = ERROR_ALARM_DELAY;
             break;
@@ -81,13 +87,13 @@ int doCommand(sStep sstep){
                     case 0:if(do_data&H_01){do_data^=H_01;}break;//A1
                     case 1:if(do_data&H_02){do_data^=H_02;}break;//A2
                     case 2:if(do_data&H_03){do_data^=H_03;}break;//A3
-                    //case 3:if(do_data&H_00){do_data^=H_00;}break;//A4
+                    case 3:if((do_data&H_04)&&(sstep.wait.value&H_04)){do_data^=H_04;}break;//A4
                     case 4:if(do_data&H_04){do_data^=H_04;}break;//A5
                     case 5:if(do_data&H_05){do_data^=H_05;}break;//A6
                     case 6:if(do_data&H_07){do_data^=H_07;}break;//A7
                     case 7:if(do_data&H_08){do_data^=H_08;}break;//A8
                     case 8:if(do_data&H_12){do_data^=H_12;}break;//A9
-                    //case 9:if(do_data&H_00){do_data^=H_00;}break;//A10
+                    case 9:if((do_data&H_12)&&(sstep.wait.value&H_10)){do_data^=H_12;}break;//A10
                     case 10:if(do_data&H_13){do_data^=H_13;}break;//A11
                     case 11:if(do_data&H_14){do_data^=H_14;}break;//A12
                     case 12:if(do_data&H_16){do_data^=H_16;}break;//A13
@@ -101,7 +107,7 @@ int doCommand(sStep sstep){
         if((di_data&H_06)&&(do_data&H_06)){clearEncoder(0);enc_s=0;enc=0;}//Delay(8);} // нижний поршень в верхнем положении левый(0)
         if((di_data&H_12)&&(do_data&H_15)){clearEncoder(1);enc_s=0;enc=0;}//Delay(8);} // нижний поршень в верхнем положении right
 
-        if(sstep.wait.type==0 && (di_data&sstep.wait.value)){break;}
+        if(sstep.wait.type==0 && ((di_data&sstep.wait.value)==sstep.wait.value)){break;}
         else if(sstep.wait.type == 1 && ((curTime-iTimeout)>= sstep.wait.value) ){break;}
         else if(sstep.wait.type == 2){
             if((do_data&H_05) && !(di_data&H_06)){
