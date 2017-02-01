@@ -477,7 +477,7 @@ void main(void){
 				 break;
 			 }
 			 case 0x25:{
-				 mainScenarioMulti[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
+				mainScenarioMulti[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
  	 		    mainScenarioMulti[6].wait.value = gRegisters[0x03];
  	 		    mainScenarioMulti[7].wait.value = gRegisters[0x00];// v10
 
@@ -488,7 +488,6 @@ void main(void){
 
  				currentScenario = mainScenarioMulti;
 				if(!finished)break;
-
 	 		   	mainScenarioMulti[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
 	 		    mainScenarioMulti[6].wait.value = gRegisters[0x03];
 	 		    mainScenarioMulti[7].wait.value = gRegisters[0x00];// v10
