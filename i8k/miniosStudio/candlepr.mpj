@@ -1,0 +1,8 @@
+[Project]
+ProjectName=candlepr.mpj
+Output=candlepr.exe
+UnitCount=1
+[Unit1]
+Compile=1
+Link=1
+Filter=Source Files

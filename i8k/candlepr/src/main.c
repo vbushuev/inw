@@ -128,6 +128,31 @@ void main(void){
 	   {H_07|H_09,{0,H_07},H_00,0},//14 move outs
 	   {H_00,{5,H_00},H_00,0}  //15 Finish
 	};
+	sStep mainScenarioMulti[]={
+		{H_04|H_02,{0,H_04|H_02},H_00,0},//00
+		{H_05|H_11,{2,H_00/*rtv.LC*/},H_00,0},//01
+		{H_04,{0,H_05},H_00,0},//02
+		{H_03,{0,H_03},H_00,0},//03
+		{H_05|H_08,{0,H_06|H_08},H_00,0},//04
+		{H_09|H_01,{0,H_15},H_09,0},//05
+		{H_06|H_09,{2,H_00/*rtv.Lh*/},H_09,0},//06
+		{H_09|H_10,{1,H_00/*rtv.tV10*/},H_09,0},//07
+		{H_07|H_09,{0,H_07},H_00,0},//08
+
+		{H_00,{3,H_00},H_00,0},  //09    Произвести фиксацию замеров для левого
+
+		{H_13|H_01,{0,H_10|H_01},H_00,0},//10
+		{H_14|H_20,{2,H_00/*rtv.RC*/},H_00,0},//11
+		{H_13,{0,H_11},H_00,0},//12
+		{H_12,{0,H_09},H_00,0},//13
+		{H_14|H_16,{0,H_12|H_13},H_00,0},//14
+		{H_18|H_02,{0,H_15/*rtv.ttaker*/},H_18,0},//15
+		{H_15|H_18,{2,H_00/*rtv.Rh*/},H_18,0},//16
+		{H_18|H_19,{1,H_00/*rtv.tV19*/},H_18,0},//17
+		{H_17|H_18,{0,H_14},H_00,0},//18
+
+		{H_00,{4,H_00},H_00,0}  //19    Произвести фиксацию замеров для левого
+	};
 	sStep testScenario[] = {
 	   {H_01,{0,H_01},H_00,0},
 	   {H_00,{5,H_00},H_00,0}  //23    Произвести фиксацию замеров для левого
@@ -439,8 +464,43 @@ void main(void){
 	 		    bonusScenario[7].wait.value = gRegisters[0x03];
 	 		    bonusScenario[8].wait.value = gRegisters[0x00];// v10
 
-	 		   currentScenario = bonusScenario; 
+	 		   currentScenario = bonusScenario;
 	 		   stepsInCirce = 11;
+	 		   finished = 0;
+	 		   sstep = 0;
+	 		   todo = 1;
+	 		   gRegisters[0x30] = 0;
+	 		   gRegisters[0x0c] = 0;
+	 		   gRegisters[0x0d] = 0;
+	 		   gRegisters[0x0e] = 0;
+	 		   gRegisters[0x0f] = 0;
+				 break;
+			 }
+			 case 0x25:{
+				 mainScenarioMulti[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
+ 	 		    mainScenarioMulti[6].wait.value = gRegisters[0x03];
+ 	 		    mainScenarioMulti[7].wait.value = gRegisters[0x00];// v10
+
+
+ 				mainScenarioMulti[11].wait.value = gRegisters[0x05] - gRegisters[0x04];
+ 				mainScenarioMulti[16].wait.value = gRegisters[0x05];
+ 				mainScenarioMulti[17].wait.value = gRegisters[0x01]; //V19
+
+ 				currentScenario = mainScenarioMulti;
+				if(!finished)break;
+
+	 		   	mainScenarioMulti[1].wait.value = gRegisters[0x03] - gRegisters[0x02];
+	 		    mainScenarioMulti[6].wait.value = gRegisters[0x03];
+	 		    mainScenarioMulti[7].wait.value = gRegisters[0x00];// v10
+
+
+				mainScenarioMulti[11].wait.value = gRegisters[0x05] - gRegisters[0x04];
+				mainScenarioMulti[16].wait.value = gRegisters[0x05];
+				mainScenarioMulti[17].wait.value = gRegisters[0x01]; //V19
+
+				currentScenario = mainScenarioMulti;
+				stepsInCirce = 20;
+
 	 		   finished = 0;
 	 		   sstep = 0;
 	 		   todo = 1;
@@ -473,7 +533,7 @@ void main(void){
 
 		 //if(!gRegisters[0x1f])ledn(0x10,sstep);
 
-		 if(todo && (di_data&H_16) ){
+		 if(todo && (di_data&H_16) && gRegisters[0x1f] ==0 ){
 		 //if(todo){
 			 if((currentScenario==0)||(currentScenario==NULL))continue;
 			 //ledn(16,stepsInCirce);
@@ -488,7 +548,6 @@ void main(void){
 			 if(sstep >= stepsInCirce){ // сбрасываем счетчик для повтора команды
 				 sstep = 0;
 			 }
-
 		 }
 
 		 //if(currentScenario!=0)ledn(16,currentScenario[sstep].wait.type*256+sstep*16+sstage);

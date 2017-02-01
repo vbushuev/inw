@@ -23,7 +23,7 @@ int initInw(){
     Show5DigitLed(5,16);
 
     // i8000 has only one systimer
-	//TimerOpen();
+	TimerOpen();
 	//TimerResetValue();
 
     EnableWDT();
@@ -45,12 +45,12 @@ int initInw(){
     if(gRegisters[0x25]>8000){
         gRegisters[0x25] = TOTAL_TIMEOUT;
         setRegisters();
-    }    
+    }
     ClearSystemKey();
     return 0;
 }
 void deinitInw(){
-    //TimerClose();
+    TimerClose();
     DisableWDT();
     closeComPort();
     setRegisters();
