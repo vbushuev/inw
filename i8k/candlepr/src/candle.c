@@ -61,15 +61,14 @@ int doCommand(sStep sstep){
 
     sendCommand(do_data);
     //Delay(8);
-    if(sstep.wait.type == 2){
+    if(sstep.wait.type == 2 && ((sstep.command&H_05)||(sstep.command&H_14))){
         encoderTimeout = (gRegisters[0x32]>0&&gRegisters[0x32]<200)?gRegisters[0x32]:encoderTimeout;
         Delay(encoderTimeout);
         //if((sstep.command&H_06)||(sstep.command&H_05))enc_s = readEncoder2(0);
         if(sstep.command&H_05)enc_s = readEncoder2(0);
-        else enc_s = readEncoder2(1);
+        else if(sstep.command&H_14) enc_s = readEncoder2(1);
     }
     //iTimeout = GetTimeTicks();
-
     TimerResetValue();
     iTimeout = TimerReadValue();
     for(;;){
@@ -108,7 +107,7 @@ int doCommand(sStep sstep){
         if((di_data&H_12)&&(do_data&H_15)){clearEncoder(1);enc_s=0;enc=0;}//Delay(8);} // нижний поршень в верхнем положении right
 
         if(sstep.wait.type==0 && ((di_data&sstep.wait.value)==sstep.wait.value)){break;}
-        else if(sstep.wait.type == 1 && ((curTime-iTimeout)>= sstep.wait.value) ){break;}
+        else if(sstep.wait.type == 1 && ((curTime-iTimeout)>= sstep.wait.value)){break;}
         else if(sstep.wait.type == 2){
             if((do_data&H_05) && !(di_data&H_06)){
                 enc = readEncoder2(0);
