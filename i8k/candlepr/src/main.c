@@ -481,12 +481,10 @@ void main(void){
  	 		    mainScenarioMulti[6].wait.value = gRegisters[0x03];
  	 		    mainScenarioMulti[7].wait.value = gRegisters[0x00];// v10
 
-
  				mainScenarioMulti[11].wait.value = gRegisters[0x05] - gRegisters[0x04];
  				mainScenarioMulti[16].wait.value = gRegisters[0x05];
  				mainScenarioMulti[17].wait.value = gRegisters[0x01]; //V19
 				currentScenario = mainScenarioMulti;
-				if(!finished)break;
 				stepsInCirce = 20;
 	 		    finished = 0;
 	 		    sstep = 0;
@@ -519,8 +517,9 @@ void main(void){
  		 **************************************************************************/
 
 		 //if(!gRegisters[0x1f])ledn(0x10,sstep);
-
-		 if(todo && (di_data&H_16) ){
+		
+		 if(todo && (di_data&H_16) && gRegisters[0x1f] ==0 ){
+			 
 		 //if(todo){
 			 if((currentScenario==0)||(currentScenario==NULL))continue;
 			 //ledn(16,stepsInCirce);
@@ -528,6 +527,7 @@ void main(void){
 			 currentStep = currentScenario[sstep];
 			 ret = doCommand(currentStep);
 			 if(ret)exception(ret);
+			 Print("CurrentStep[%d] StepsInScenario[%d] CurrentError[%d]\n",sstep,stepsInCirce,gRegisters[0x1f]);
 			 ledn(0,sstep);
 			 //Delay(50);
 

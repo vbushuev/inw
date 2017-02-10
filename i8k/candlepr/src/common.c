@@ -5,7 +5,7 @@ extern int gRegisters[128];
 int exception(int e){
 	e = -e;
 	gRegisters[0x1f] = e;
-	gRegisters[0x20] = 0x80;
+	//gRegisters[0x20] = 0x80;
 	//gRegisters[0x27] = 8;
 	return 0;
 }

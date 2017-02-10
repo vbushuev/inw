@@ -76,6 +76,8 @@ long readEncoder2(int channel){
 	//i8080_ReadCntUpDown(ECSLOT,channel,&count,&Overflow);
 	i8080_ReadCntPulseDir(ECSLOT,0+2*channel,&count,&Overflow);
 	//ledword(0xe,count);
+	
+	
 	gRegisters[0x23+channel] = count;
     return count;
 }

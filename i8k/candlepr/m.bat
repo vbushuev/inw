@@ -1,4 +1,4 @@
 cls
 del dist\candlepr.exe
 del obj\*.obj
-make -fmakefile
+..\TC\BIN\make -fmakefile

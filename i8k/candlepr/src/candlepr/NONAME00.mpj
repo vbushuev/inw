@@ -1,0 +1,69 @@
+[Project]
+ProjectName=NONAME00.mpj
+Output=NONAME00.exe
+UnitCount=12
+ProjectType=Basic
+
+[Unit1]
+FileName=..\candle.c
+CompileCpp=0
+Folder=
+Compile=1
+Open=1
+Link=1
+Filter=Source Files
+[Unit2]
+FileName=..\main.c
+Compile=1
+Link=1
+Filter=Source Files
+[Unit3]
+FileName=..\common.c
+Compile=1
+Link=1
+Filter=Source Files
+[Unit4]
+FileName=..\funcs.c
+Compile=1
+Link=1
+Filter=Source Files
+[Unit5]
+FileName=..\io.c
+Compile=1
+Link=1
+Filter=Source Files
+[Unit6]
+FileName=..\modbus.c
+Compile=1
+Link=1
+Filter=Source Files
+[Unit7]
+FileName=..\funcs.h
+Compile=0
+Link=0
+Filter=Header Files
+[Unit8]
+FileName=..\candle.h
+Compile=0
+Link=0
+Filter=Header Files
+[Unit9]
+FileName=..\defines.h
+Compile=0
+Link=0
+Filter=Header Files
+[Unit10]
+FileName=..\errors.h
+Compile=0
+Link=0
+Filter=Header Files
+[Unit11]
+FileName=..\..\..\lib\8080l.lib
+Compile=0
+Link=1
+Filter=Library Files
+[Unit12]
+FileName=..\..\..\lib\8000e.lib
+Compile=0
+Link=1
+Filter=Library Files
